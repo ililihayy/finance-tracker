@@ -1,0 +1,22 @@
+[default]
+extend-ignore-words-re = ["[A-Z]{2}", "[A-Z]{3}", "yoy", "nin"]
+
+extend-ignore-re = [
+    # Line ignore with trailing "spellchecker:disable-line".
+    "(?Rm)^.*#\\s*spellchecker:disable-line$",
+    "[Tt]awk\\.to",
+]
+
+[files]
+extend-exclude = [
+    ".codespellrc",
+    ".gitignore",
+    "*.json",
+    "*.ndjson",
+    "*.html",
+    "*.csv",
+    "*.ipynb",
+    "docs/*.drawio",
+    "traveltech_common/utils/languages.py",
+    "traveltech_common/utils/currencies.py",
+]

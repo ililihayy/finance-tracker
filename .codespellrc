@@ -1,0 +1,13 @@
+[codespell]
+check-hidden = False
+skip = *.baseline,*.cache*,*.html,*.json,*.conf,*.yml,*.yaml,.gitignore,poetry.lock,
+ ,traveltech_common/utils/languages.py,
+ ,traveltech_common/utils/countries.py,
+ ,traveltech_common/utils/currencies.py,
+ ,traveltech_booking/exchange_rates/non_iso_currency_codes.py,
+ ,docs/cronjob.md,
+ ,docs/*.ipynb,
+ ,typos.toml
+ignore-words-list = nin, irregardless, referer, master, blacklist, tawk, deque, jupyter, lite, keypair, mailvelope, checkin, mailin
+builtin = clear,rare,usage,code
+ignore-regex=.*codespell:ignore
