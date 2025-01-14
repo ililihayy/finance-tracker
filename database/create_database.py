@@ -2,6 +2,8 @@
 
 import sqlite3
 
+from log.logger import log
+
 conn = sqlite3.connect("tracker.db")
 cursor = conn.cursor()
 
@@ -23,6 +25,8 @@ def create_user_expenses_table(username: str) -> None:
         )
         """
     )
+    log.log("INFO", f"Create expenses table for {username}")
+    create_user_categories_table(username)
 
 
 def create_users_table() -> None:
@@ -34,6 +38,7 @@ def create_users_table() -> None:
     )
     """
     )
+    log.log("INFO", "Create users table")
 
 
 def create_user_categories_table(username: str) -> None:
@@ -48,6 +53,7 @@ def create_user_categories_table(username: str) -> None:
     )
 
     insert_user_default_categories(username)
+    log.log("INFO", f"Create categories table for {username}")
 
 
 def insert_user_default_categories(username: str) -> None:
@@ -63,3 +69,4 @@ def insert_user_default_categories(username: str) -> None:
     ]
     for category in categories:
         cursor.execute(f"INSERT OR IGNORE INTO {categories_table} (name) VALUES (?)", (category,))
+    log.log("INFO", "Insert default categories")

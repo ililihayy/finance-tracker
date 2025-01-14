@@ -2,6 +2,8 @@
 
 import sqlite3
 
+from log.logger import log
+
 from .create_database import conn, create_user_categories_table, create_user_expenses_table, cursor
 from .exceptions import CategoryAlreadyExistsError, UserAlreadyExistError
 
@@ -14,7 +16,9 @@ class Utils:
             conn.commit()
             create_user_expenses_table(username)
             create_user_categories_table(username)
+            log.log("INFO", f"Add user '{username}'")
         except sqlite3.IntegrityError as err:
+            log.log("ERROR", f"User '{username}' already exists")
             raise UserAlreadyExistError(f"User {username} already exists") from err  # noqa: TRY003
 
     @staticmethod
@@ -25,16 +29,19 @@ class Utils:
             (category, amount, expense_date),
         )
         conn.commit()
+        log.log("INFO", f"Add expense {username} - {category} - {amount} - {expense_date}")
 
     @staticmethod
     def add_user_category(username: str, category_name: str) -> None:
         categories_table = f"categories_{username}"
         cursor.execute(f"SELECT COUNT(*) FROM {categories_table} WHERE name = ?", (category_name,))
         if cursor.fetchone()[0] > 0:
+            log.log("ERROR", f"Category '{category_name}' exists")
             raise CategoryAlreadyExistsError(f"Category '{category_name}' exists")  # noqa: TRY003
 
         cursor.execute(f"INSERT INTO {categories_table} (name) VALUES (?)", (category_name,))
         conn.commit()
+        log.log("INFO", f"Add category for {username} - {category_name}")
 
     @staticmethod
     def clear_table(username: str, *, expenses: bool = True, categories: bool = True) -> None:
@@ -43,8 +50,10 @@ class Utils:
 
         if expenses:
             cursor.execute(f"DELETE FROM {expenses_table}")
+            log.log("INFO", f"Clear table expenses for {username} ")
         if categories:
             cursor.execute(f"DELETE FROM {categories_table}")
+            log.log("INFO", f"Clear table categories for {username} ")
 
         conn.commit()
 
@@ -59,3 +68,4 @@ class Utils:
         cursor.execute("DELETE FROM users WHERE username = ?", (username,))
 
         conn.commit()
+        log.log("INFO", f"Delete user '{username}'")

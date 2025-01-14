@@ -9,7 +9,7 @@ if __name__ == "__main__":
     create_full_database()
     Ut.add_user("bro")
     Ut.add_expense("bro", "Food", 150.75, datetime.datetime.now(datetime.UTC).strftime("%d-%m-%Y"))
-    Ut.add_user_category("john_doe", "Utilities")
+    Ut.add_user_category("bro", "Utilities")
 
 conn.commit()
 conn.close()
