@@ -6,5 +6,11 @@ __pycache__/
 .dmypy.json
 dmypy.json
 
-#ruff
+# Ruff
 .ruff_cache
+
+# Database
+*.db
+
+# log
+application.log
