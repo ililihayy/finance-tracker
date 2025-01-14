@@ -1,10 +1,12 @@
 # Copyright (c) 2025 ililihayy. All rights reserved.
 
+import os
 import sqlite3
 
 from log.logger import log
 
-conn = sqlite3.connect("tracker.db")
+path = os.getenv("FT_DATABASE_PATH")
+conn = sqlite3.connect(str(path))
 cursor = conn.cursor()
 
 
