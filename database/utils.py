@@ -10,16 +10,19 @@ from .exceptions import CategoryAlreadyExistsError, UserAlreadyExistError
 
 class Utils:
     @staticmethod
-    def add_user(username: str) -> None:
+    def add_user(username: str, email: str, password: str) -> None:
         try:
-            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+            cursor.execute(
+                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                (username, email, password),
+            )
             conn.commit()
             create_user_expenses_table(username)
             create_user_categories_table(username)
-            log.log("INFO", f"Add user '{username}'")
+            log.log("INFO", f"Add user '{username}' with email '{email}'")
         except sqlite3.IntegrityError as err:
-            log.log("ERROR", f"User '{username}' already exists")
-            raise UserAlreadyExistError(f"User {username} already exists") from err  # noqa: TRY003
+            log.log("ERROR", f"User '{username}' or email '{email}' already exists")
+            raise UserAlreadyExistError(f"User {username} or email {email} already exists") from err  # noqa: TRY003
 
     @staticmethod
     def add_expense(username: str, category: str, amount: float, expense_date: str) -> None:

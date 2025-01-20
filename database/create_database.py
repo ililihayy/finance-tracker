@@ -23,22 +23,24 @@ def create_user_expenses_table(username: str) -> None:
             category TEXT NOT NULL,
             amount REAL NOT NULL,
             expense_date DATETIME NOT NULL,
-            FOREIGN KEY (category) REFERENCES categories (name)
+            FOREIGN KEY (category) REFERENCES categories_{username} (name)
         )
         """
     )
-    log.log("INFO", f"Create expenses table for {username}")
+    log.log("INFO", f"Create expenses table for username {username}")
     create_user_categories_table(username)
 
 
 def create_users_table() -> None:
     cursor.execute(
         """
-    CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL
-    )
-    """
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+        """
     )
     log.log("INFO", "Create users table")
 
@@ -55,7 +57,7 @@ def create_user_categories_table(username: str) -> None:
     )
 
     insert_user_default_categories(username)
-    log.log("INFO", f"Create categories table for {username}")
+    log.log("INFO", f"Create categories table for username {username}")
 
 
 def insert_user_default_categories(username: str) -> None:
