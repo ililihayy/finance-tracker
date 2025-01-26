@@ -21,8 +21,8 @@ def create_user_expenses_table(username: str) -> None:
         CREATE TABLE IF NOT EXISTS {table_name} (
             expense_id INTEGER PRIMARY KEY AUTOINCREMENT,
             category TEXT NOT NULL,
-            amount REAL NOT NULL,
-            expense_date DATETIME NOT NULL,
+            amount TEXT NOT NULL,
+            expense_date TEXT NOT NULL,
             FOREIGN KEY (category) REFERENCES categories_{username} (name)
         )
         """
