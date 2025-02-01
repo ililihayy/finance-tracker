@@ -89,3 +89,42 @@ class Utils:
         cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
         encrypted_password = cursor.fetchone()[0]
         return decrypt_data(encrypted_password)
+
+    @staticmethod
+    def get_monthly_expenses_by_category(username: str, category: str, month: str, year: str) -> float:
+        """
+        Calculate the total expenses for a given category, month, and year.
+        :param username: User's username
+        :param category: Expense category
+        :param month: Month in MM format
+        :param year: Year in YYYY format
+        :return: Total expenses for the category as a float
+        """
+        table_name = f"expenses_{username}"
+        cursor.execute(
+            f"SELECT amount FROM {table_name} WHERE category = ? AND strftime('%m', expense_date) = ? AND strftime('%Y', expense_date) = ?",  # noqa:  E501
+            (category, month, year),
+        )
+        expenses = cursor.fetchall()
+        total = sum(float(decrypt_data(expense[0])) for expense in expenses)
+        log.log("INFO", f"Total expenses for {username} in category '{category}' in {month}/{year}: {total}")
+        return total
+
+    @staticmethod
+    def get_monthly_expenses(username: str, month: str, year: str) -> float:
+        """
+        Calculate the total expenses for a given month and year.
+        :param username: User's username
+        :param month: Month in MM format
+        :param year: Year in YYYY format
+        :return: Total expenses as a float
+        """
+        table_name = f"expenses_{username}"
+        cursor.execute(
+            f"SELECT amount FROM {table_name} WHERE strftime('%m', expense_date) = ? AND strftime('%Y', expense_date) = ?",  # noqa:  E501
+            (month, year),
+        )
+        expenses = cursor.fetchall()
+        total = sum(float(decrypt_data(expense[0])) for expense in expenses)
+        log.log("INFO", f"Total expenses for {username} in {month}/{year}: {total}")
+        return total
