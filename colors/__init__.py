@@ -1,3 +1,3 @@
 # Copyright (c) 2025 ililihayy. All rights reserved.
 
-from .utils import Colors as Col
+from .utils import LogColors as LC, RegColors as RC

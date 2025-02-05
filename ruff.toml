@@ -83,7 +83,9 @@ lint.ignore = [
     "RUF027",
     # This gives false positives and is generally useless.
     "B011",
-    "TRY003"
+    "TRY003",
+    # Unused function argument
+    "CPY001"
 ]
 line-length = 120
 lint.select = [
@@ -189,6 +191,5 @@ max-complexity = 10
 
 [lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**/__init__.py" = ["F401"]
-"tests/**" = ["ARG001", "ARG004", "PLR6301", "FBT001"]
-"**/testing/**" = ["ARG001", "ARG004"]
+"ui/**" = ["ARG001", "ARG004", "N802",]
+"colors/**" = ["N817"]
