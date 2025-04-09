@@ -45,7 +45,7 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         page.go("/register")
 
     def forgot_password(e: Any) -> None:
-        pass
+        page.go("/forgot-password")
 
     def register(e: Any) -> None:
         page.go("/register")
