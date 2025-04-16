@@ -85,8 +85,15 @@ class Utils:
         return decrypt_data(encrypted_email)
 
     @staticmethod
-    def get_user_password(username: str) -> str:
-        cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
+    def get_user_name(password: str) -> str:
+        cursor.execute("SELECT email FROM users WHERE password = ?", (encrypt_data(password),))
+        return cursor.fetchone()[0]
+
+    @staticmethod
+    def get_user_password(identifier: str) -> str:
+        cursor.execute(
+            "SELECT password FROM users WHERE username = ? or email = ?", (identifier, encrypt_data(identifier))
+        )
         encrypted_password = cursor.fetchone()[0]
         return decrypt_data(encrypted_password)
 
