@@ -5,6 +5,7 @@ from typing import Any
 import flet as ft  # type: ignore[import-not-found]
 from flet_route import Basket, Params  # type: ignore[import-not-found]
 
+from auth import Auth
 from colors import LC
 
 
@@ -42,7 +43,11 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     def login_click(e: Any) -> None:
-        page.go("/register")
+        hash_password = Auth.hash_password(password.value)
+        username_val = username.value
+        Auth.login_user(username_val, hash_password)
+
+        page.add_snackbar(ft.Snackbar(f"User {username} logins", open=True))
 
     def forgot_password(e: Any) -> None:
         page.go("/forgot-password")

@@ -28,12 +28,13 @@ class Auth:
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     @staticmethod
-    def send_confirmation_email(email: str, confirmation_code: str) -> None:
+    def send_confirmation_email(email: str) -> None:
+        Auth.confirmation_code = Auth.generate_confirmation_code()
         sender_email = "liliworkgames@gmail.com"
         password = os.getenv("GMAIL_KEY") or ""
         receiver_email = email
         subject = "Email Confirmation from Finance Tracker!"
-        body = f"Your confirmation code is: {confirmation_code}"
+        body = f"Your confirmation code is: {Auth.confirmation_code}"
 
         msg = MIMEMultipart()
         msg["From"] = sender_email
@@ -42,7 +43,7 @@ class Auth:
         msg.attach(MIMEText(body, "plain"))
 
         try:
-            with smtplib.SMTP("smtp.example.com", 587) as server:
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
                 server.starttls()
                 server.login(sender_email, password)
                 server.sendmail(sender_email, receiver_email, msg.as_string())
@@ -52,12 +53,8 @@ class Auth:
 
     @staticmethod
     def register_user(username: str, email: str, password: str, user_code: str) -> None:
-        hashed_password = Auth.hash_password(password)
-        Auth.confirmation_code = Auth.generate_confirmation_code()
-        Auth.send_confirmation_email(email, Auth.confirmation_code)
-
         if user_code == Auth.confirmation_code:
-            Db_utils.add_user(username, email, hashed_password)
+            Db_utils.add_user(username, email, password)
         else:
             raise ConfirmCodeError("The verification code is incorrect")
 

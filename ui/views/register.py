@@ -5,7 +5,10 @@ from typing import Any
 import flet as ft  # type: ignore[import-not-found]
 from flet_route import Basket, Params  # type: ignore[import-not-found]
 
+from auth import Auth
 from colors import RC
+
+from . import confirmation as conf
 
 
 def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
@@ -51,7 +54,16 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         page.go("/")
 
     def register(e: Any) -> None:
-        pass
+        username_val = username.value
+        email_val = email.value
+
+        if password.value == repeat_password.value:
+            conf.REGISTER_DATA = {
+                "username": username_val,
+                "email": email_val,
+                "hash_password": Auth.hash_password(password.value),
+            }
+            page.go("/confirmation")
 
     reg_button = ft.ElevatedButton(
         "Registration", on_click=register, bgcolor=RC.SUPER_DARK_GREEN, color=RC.LIGHT_YELLOW, width=140, height=35
