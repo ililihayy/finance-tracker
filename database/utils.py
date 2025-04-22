@@ -150,3 +150,14 @@ class Utils:
         total = sum(float(decrypt_data(expense[0])) for expense in expenses)
         log.log("INFO", f"Total expenses for {username} in {month}/{year}: {total}")
         return total
+
+    @staticmethod
+    def get_user_categories(username: str) -> list[str]:
+        categories_table = f"categories_{username}"
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT name FROM {categories_table}")
+            categories = cursor.fetchall()
+        result = [category[0] for category in categories]
+        log.log("INFO", f"Fetched categories for user '{username}': {result}")
+        return result
