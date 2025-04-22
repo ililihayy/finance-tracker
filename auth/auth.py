@@ -28,6 +28,10 @@ class Auth:
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     @staticmethod
+    def check_password(stored_hash: str, password: str) -> bool:
+        return bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8"))
+
+    @staticmethod
     def send_confirmation_email(email: str) -> None:
         Auth.confirmation_code = Auth.generate_confirmation_code()
         sender_email = "liliworkgames@gmail.com"
@@ -63,7 +67,7 @@ class Auth:
         user_password = Db_utils.get_user_password(identifier)
         username = Db_utils.get_user_name(user_password)
 
-        if user_password == password:
+        if Auth.check_password(user_password, password):
             log.log("INFO", f"User '{username}' logged in successfully.")
             Auth.current_user = username
             return username

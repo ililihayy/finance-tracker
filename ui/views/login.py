@@ -43,11 +43,15 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     def login_click(e: Any) -> None:
-        hash_password = Auth.hash_password(password.value)
         username_val = username.value
-        Auth.login_user(username_val, hash_password)
-
-        page.add_snackbar(ft.Snackbar(f"User {username} logins", open=True))
+        try:
+            Auth.login_user(username_val, password.value)
+            page.open(ft.SnackBar(ft.Text("Login successfully!")))
+            page.update()
+            page.go("/expenses")
+        except Exception:
+            page.open(ft.SnackBar(ft.Text("Password or username is incorrect.")))
+            page.update()
 
     def forgot_password(e: Any) -> None:
         page.go("/forgot-password")
