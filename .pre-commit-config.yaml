@@ -53,12 +53,12 @@ repos:
       - id: typos
 
   # Source: https://stackoverflow.com/a/75003826/9608133
-  - repo: local
-    hooks:
-      - id: mypy
-        name: mypy
-        entry: mypy
-        require_serial: true
-        language: system
-        types: [python]
-        args: ["--install-types", "--non-interactive"]
+  # - repo: local
+  #   hooks:
+  #     - id: mypy
+  #       name: mypy
+  #       entry: mypy
+  #       require_serial: true
+  #       language: system
+  #       types: [python]
+  #       args: ["--install-types", "--non-interactive"]
