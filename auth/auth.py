@@ -63,13 +63,12 @@ class Auth:
             raise ConfirmCodeError("The verification code is incorrect")
 
     @staticmethod
-    def login_user(identifier: str, password: str) -> str:
+    def login_user(identifier: str, password: str) -> None:
         user_password = Db_utils.get_user_password(identifier)
-        username = Db_utils.get_user_name(user_password)
 
         if Auth.check_password(user_password, password):
-            log.log("INFO", f"User '{username}' logged in successfully.")
-            Auth.current_user = username
-            return username
-        log.log("ERROR", "Invalid credentials")
-        raise InvalidCredentialsError("Invalid username/email or password")
+            log.log("INFO", f"User '{identifier}' logged in successfully.")
+            Auth.current_user = identifier
+        else:
+            log.log("ERROR", "Invalid credentials")
+            raise InvalidCredentialsError("Invalid username/email or password")
