@@ -1,6 +1,8 @@
 # Copyright (c) 2025 ililihayy. All rights reserved.
 
 import sqlite3
+from datetime import datetime
+from typing import Any
 
 from log.logger import log
 from security.utils import decrypt_data, encrypt_data
@@ -161,3 +163,34 @@ class Utils:
         result = [category[0] for category in categories]
         log.log("INFO", f"Fetched categories for user '{username}': {result}")
         return result
+
+    @staticmethod
+    def get_user_expenses(username: str) -> list[dict[str, Any]]:
+        table_name = f"expenses_{username}"
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"""
+                SELECT expense_id, amount, category, expense_date FROM {table_name}
+                ORDER BY expense_date DESC
+            """)
+            rows = cursor.fetchall()
+
+        expenses = []
+        for expense_id, amount, category, date_str in rows:
+            date = datetime.strptime(decrypt_data(date_str), "%d/%m/%Y")
+            expenses.append({
+                "expense_id": expense_id,
+                "amount": float(decrypt_data(amount)),
+                "category": category,
+                "date": date,
+            })
+
+        return expenses
+
+    @staticmethod
+    def delete_user_expense(username: str, expense_id: int):
+        table_name = f"expenses_{username}"
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"DELETE FROM {table_name} WHERE expense_id = ?", (expense_id,))
+            conn.commit()
