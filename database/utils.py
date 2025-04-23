@@ -194,3 +194,18 @@ class Utils:
             cursor = conn.cursor()
             cursor.execute(f"DELETE FROM {table_name} WHERE expense_id = ?", (expense_id,))
             conn.commit()
+
+    @staticmethod
+    def update_user_expense(username: str, expense_id: int, category: str, amount: float, date: str):
+        table_name = f"expenses_{username}"
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"""
+                UPDATE {table_name}
+                SET category = ?, amount = ?, expense_date = ?
+                WHERE expense_id = ?
+                """,
+                (category, str(amount), date, expense_id),
+            )
+            conn.commit()
