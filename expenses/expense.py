@@ -14,3 +14,11 @@ class Expense:
     @staticmethod
     def add_expense(category: str, amount: float, expense_date: str):
         Db.add_expense(Auth.current_user, category, amount, expense_date)
+
+    @staticmethod
+    def get_all_user_expenses():
+        return Db.get_user_expenses(Auth.current_user)
+
+    @staticmethod
+    def delete_expense(id: int):
+        Db.delete_user_expense(Auth.current_user, id)

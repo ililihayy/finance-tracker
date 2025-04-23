@@ -21,11 +21,14 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         Expense.add_expense(category_dropdown.value, float(expense_input.value), selected_date.strftime("%d/%m/%Y"))
         print("add expense")
 
+        expense_list.controls = build_expense_rows()
+        expense_list.update()
+
     expense_input = ft.TextField(label="Сума витрати", keyboard_type=ft.KeyboardType.NUMBER, prefix_text="₴", width=200)
     new_category_input = ft.TextField(label="Нова категорія", width=200, visible=False)
     category_dropdown = ft.Dropdown(label="Категорія", width=200, options=[ft.dropdown.Option(c) for c in categories])
     add_category_button = ft.IconButton(icon=ft.icons.ADD, tooltip="Додати нову категорію", on_click=add_category_click)
-    date_display = ft.Text(f"Дата: {selected_date.strftime('%Y-%m-%d')}", size=16)
+    date_display = ft.Text(f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16)
     add_expense_button = ft.FilledButton("Додати витрату", on_click=add_expense_click)
 
     # Date select
@@ -34,7 +37,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         nonlocal selected_date
         if e.control.value:
             selected_date = e.control.value
-            date_display.value = f"Дата: {selected_date.strftime('%Y-%m-%d')}"
+            date_display.value = f"Дата: {selected_date.strftime('%d/%m/%Y')}"
             page.update()
 
     def handle_dismissal(e):
@@ -53,34 +56,39 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         ),
     )
 
-    expense_list = ft.ListView(spacing=10, padding=20, auto_scroll=True, expand=True)
-    expense_list.controls = [
-        ft.Row(
-            [
-                ft.Column(
-                    [ft.Text("120.00 ₴ - Їжа", size=16), ft.Text("Дата: 2025-04-21", size=14, color=ft.colors.BLACK54)],
-                    expand=True,
-                ),
-                ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати"),
-                ft.IconButton(icon=ft.icons.DELETE, tooltip="Видалити"),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        ),
-        ft.Row(
-            [
-                ft.Column(
-                    [
-                        ft.Text("50.00 ₴ - Транспорт", size=16),
-                        ft.Text("Дата: 2025-04-20", size=14, color=ft.colors.BLACK54),
-                    ],
-                    expand=True,
-                ),
-                ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати"),
-                ft.IconButton(icon=ft.icons.DELETE, tooltip="Видалити"),
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        ),
-    ]
+    def delete_expense(expense_id: int):
+        Expense.delete_expense(expense_id)
+        expense_list.controls = build_expense_rows()
+        expense_list.update()
+
+    def build_expense_rows():
+        db_expenses = Expense.get_all_user_expenses()
+        db_expenses.sort(key=lambda x: x["date"], reverse=True)
+        rows = []
+
+        for expense in db_expenses:
+            row = ft.Row(
+                [
+                    ft.Column(
+                        [
+                            ft.Text(f"{expense['category']} - {expense['amount']:.2f} ₴", size=16),
+                            ft.Text(f"Дата: {expense['date'].strftime('%Y-%m-%d')}", size=14),
+                            ft.Text("______________________________________________________________"),
+                        ],
+                        expand=True,
+                    ),
+                    ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати"),
+                    ft.IconButton(
+                        icon=ft.icons.DELETE,
+                        tooltip="Видалити",
+                        on_click=lambda e, id=expense["expense_id"]: delete_expense(id),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            )
+            rows.append(row)
+
+        return rows
 
     pie_chart = ft.PieChart(
         width=400,
@@ -111,6 +119,9 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         border_radius=10,
         margin=10,
     )
+
+    expense_list = ft.ListView(spacing=10, padding=20, auto_scroll=True, expand=True)
+    expense_list.controls = build_expense_rows()
 
     expenses_history_container = ft.Container(
         content=ft.Column([ft.Text("Історія витрат", size=20, weight="bold"), expense_list], spacing=10, expand=True),
