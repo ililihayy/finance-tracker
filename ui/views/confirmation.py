@@ -6,7 +6,9 @@ import flet as ft  # type: ignore[import-not-found]
 from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
+from auth.exceptions import ConfirmCodeError
 from colors import RC
+from database.exceptions import UserAlreadyExistError
 
 REGISTER_DATA: dict[str, str] = {}
 
@@ -58,24 +60,24 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             show_notification("Будь ласка, введіть код підтвердження")
             return
 
-        # try:
-        Auth.register_user(
-            REGISTER_DATA["username"],
-            REGISTER_DATA["email"],
-            REGISTER_DATA["hash_password"],
-            code,
-        )
-        show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
-        page.update()
-        page.go("/")
-        page.views.clear()
-        # except UserAlreadyExistError:
-        #     show_notification("Користувач з таким ім'ям або email вже існує")
-        # except ConfirmCodeError as err:
-        #     if "Invalid confirmation code" in str(err):
-        #         show_notification("Невірний код підтвердження")
-        #     else:
-        #         show_notification(str(err))
+        try:
+            Auth.register_user(
+                REGISTER_DATA["username"],
+                REGISTER_DATA["email"],
+                REGISTER_DATA["hash_password"],
+                code,
+            )
+            show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
+            page.update()
+            page.go("/")
+            page.views.clear()
+        except UserAlreadyExistError:
+            show_notification("Користувач з таким ім'ям або email вже існує")
+        except ConfirmCodeError as err:
+            if "Invalid confirmation code" in str(err):
+                show_notification("Невірний код підтвердження")
+            else:
+                show_notification(str(err))
 
     def resend_code(e: Any) -> None:
         try:

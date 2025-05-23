@@ -50,7 +50,6 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
             page.update()
         except ValueError as err:
             show_notification(str(err), True)
-            # Reset fields if email is not found
             code_field.disabled = True
             new_password.disabled = True
             confirm_password.disabled = True
@@ -58,7 +57,6 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
             page.update()
         except Exception as err:
             show_notification(f"Помилка при відправці коду: {err!s}", True)
-            # Reset fields on any error
             code_field.disabled = True
             new_password.disabled = True
             confirm_password.disabled = True
@@ -84,20 +82,16 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
             show_notification(error_msg, True)
             return
 
-        # Auth.reset_password(email, code, new_pass)
         Utils.unblock_user(Auth.blocked_user)
         show_notification("Пароль успішно змінено!")
-        # Clear all fields
         code_field.value = ""
         new_password.value = ""
         confirm_password.value = ""
-        # Disable fields
         code_field.disabled = True
         new_password.disabled = True
         confirm_password.disabled = True
         reset_button.disabled = True
         page.update()
-        # Navigate to login page
         page.go("/")
 
     def back_to_login(e: Any) -> None:

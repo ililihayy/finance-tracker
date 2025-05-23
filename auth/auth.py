@@ -34,7 +34,6 @@ class Auth:
 
     @staticmethod
     def verify_email_exists(email: str) -> bool:
-        """Verify if email exists in the database."""
         from database.utils import Utils as Db_utils
 
         username = Db_utils.get_username_by_email(email)
@@ -46,7 +45,7 @@ class Auth:
         sender_email = "liliworkgames@gmail.com"
         password = os.getenv("GMAIL_KEY") or ""
         receiver_email = email
-        subject = "Підтвердження зміни паролю - Finance Tracker"
+        subject = "Підтвердження пошти - Finance Tracker"
         body = f"Ваш код підтвердження: {Auth.confirmation_code}"
 
         msg = MIMEMultipart()
@@ -93,7 +92,6 @@ class Auth:
 
     @staticmethod
     def verify_confirmation_code(email: str, code: str) -> bool:
-        """Verify if the provided code matches the sent confirmation code."""
         if Auth.confirmation_code is None:
             log.log("ERROR", "No confirmation code was generated")
             return False
@@ -106,7 +104,6 @@ class Auth:
 
     @staticmethod
     def reset_password(email: str, code: str, new_password: str) -> None:
-        """Reset user password after code verification."""
         from database.utils import Utils as Db_utils
 
         if not code:

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from auth.auth import Auth  # або відповідний імпорт
+from auth.auth import Auth
 
 
 class TestUtils(unittest.TestCase):

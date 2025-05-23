@@ -13,11 +13,6 @@ from . import confirmation as conf
 
 
 def validate_username(username: str) -> tuple[bool, str]:
-    """Validate username:
-    - Only letters, numbers, and underscores
-    - Length between 3 and 20 characters
-    - Must start with a letter
-    """
     if not username:
         return False, "Ім'я користувача не може бути порожнім"
 
@@ -28,7 +23,6 @@ def validate_username(username: str) -> tuple[bool, str]:
 
 
 def validate_email(email: str) -> tuple[bool, str]:
-    """Validate email format"""
     if not email:
         return False, "Email не може бути порожнім"
 
@@ -74,7 +68,6 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.window.height = 700
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
-    # Error text for validation messages
     username_error = ft.Text("", color="red", size=12)
     email_error = ft.Text("", color="red", size=12)
     password_error = ft.Text("", color="red", size=12)

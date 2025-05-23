@@ -257,12 +257,11 @@ class Utils:
             cursor.execute("SELECT is_blocked FROM users WHERE username = ?", (identifier,))
             result = cursor.fetchone()
         if result is None:
-            return None  # Користувача не знайдено
+            return None
         return bool(result[0])
 
     @staticmethod
     def update_user_password(username: str, new_password: str) -> None:
-        """Update user's password in the database."""
         encrypted_password = encrypt_data(new_password)
         with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
             cursor = conn.cursor()
@@ -272,7 +271,6 @@ class Utils:
 
     @staticmethod
     def get_username_by_email(email: str) -> str | None:
-        """Get username by email address."""
         encrypted_email = encrypt_data(email)
         print("email  ", encrypted_email)
         with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
