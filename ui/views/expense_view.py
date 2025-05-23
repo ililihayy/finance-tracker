@@ -224,16 +224,47 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     selected_date = datetime.now()
 
     def add_category_click(e: Any):
-        if new_category_input.value:
-            Expense.add_category(new_category_input.value)
-            category_dropdown.options.append(ft.dropdown.Option(new_category_input.value))
-            category_dropdown.value = new_category_input.value
+        category_name = new_category_input.value.strip()
+        if not category_name:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Будь ласка, введіть назву категорії"), bgcolor=ExpColors.SUPER_DARK_GREEN
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        # Check if category already exists
+        if category_name in categories:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Така категорія вже існує"), bgcolor=ExpColors.SUPER_DARK_GREEN
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        try:
+            Expense.add_category(category_name)
+            categories.append(category_name)
+            category_dropdown.options = [ft.dropdown.Option(c) for c in categories]
+            category_dropdown.value = category_name
             new_category_input.value = ""
-            new_category_input.visible = False
+            update_category_visibility(False)  # Hide the input and button
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Категорію '{category_name}' додано успішно"), bgcolor=ExpColors.SUPER_DARK_GREEN
+            )
+            page.snack_bar.open = True
+            page.update()
+        except Exception as err:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Помилка при додаванні категорії: {err!s}"), bgcolor=ExpColors.SUPER_DARK_GREEN
+            )
+            page.snack_bar.open = True
             page.update()
 
     def toggle_new_category(e):
         new_category_input.visible = not new_category_input.visible
+        if new_category_input.visible:
+            new_category_input.focus()
         page.update()
 
     def add_expense_click(e: Any):
@@ -265,6 +296,9 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         color=ExpColors.LIGHT_YELLOW,
         cursor_color=ExpColors.LIGHT_YELLOW,
         label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+        hint_text="Введіть назву нової категорії",
+        hint_style=ft.TextStyle(color=ExpColors.LIGHT_GREEN),
+        on_submit=add_category_click,  # Allow adding category by pressing Enter
     )
 
     category_dropdown = ft.Dropdown(
@@ -280,8 +314,31 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     add_category_button = ft.IconButton(
         icon=ft.icons.ADD,
         tooltip="Додати нову категорію",
-        on_click=toggle_new_category,
         icon_color=ExpColors.LIGHT_YELLOW,
+    )
+
+    category_row = ft.Row(
+        [
+            category_dropdown,
+            add_category_button,
+            ft.Container(
+                content=ft.Column(
+                    [
+                        new_category_input,
+                        ft.ElevatedButton(
+                            "Додати категорію",
+                            on_click=add_category_click,
+                            style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+                            visible=False,
+                        ),
+                    ],
+                    spacing=5,
+                ),
+                visible=False,
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.START,
+        spacing=10,
     )
 
     date_display = ft.Text(f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
@@ -458,13 +515,21 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
 
         return rows
 
+    def update_category_visibility(visible: bool):
+        new_category_input.visible = visible
+        category_row.controls[2].visible = visible
+        if visible:
+            new_category_input.focus()
+        page.update()
+
+    add_category_button.on_click = lambda e: update_category_visibility(not new_category_input.visible)
+
     add_expense_container = ft.Container(
         content=ft.Column(
             [
                 ft.Text("Додати нову витрату", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW),
                 expense_input,
-                ft.Row([category_dropdown, add_category_button]),
-                new_category_input,
+                category_row,
                 ft.Row([date_display, date_icon_button]),
                 add_expense_button,
             ],
