@@ -42,7 +42,8 @@ def create_users_table() -> None:
                 username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                salt BLOB
+                salt BLOB,
+                is_blocked BOOLEAN DEFAULT FALSE
             )
             """
         )

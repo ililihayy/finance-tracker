@@ -7,6 +7,7 @@ from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
 from colors import LC
+from database import Utils
 
 
 def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
@@ -50,6 +51,7 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         username_val = username.value
         if attempts >= 3:
             page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
+            Utils.block_user(username_val)
             page.update()
             return
 

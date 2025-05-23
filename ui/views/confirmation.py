@@ -8,14 +8,15 @@ from flet_route import Basket, Params  # type: ignore[import-not-found]
 from auth import Auth
 from colors import RC
 from database.exceptions import UserAlreadyExistError
+from auth.exceptions import ConfirmCodeError
 
 REGISTER_DATA: dict[str, str] = {}
 
 
 def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
-    page.title = "Confirm Email"
-    page.window.width = 800
-    page.window.height = 600
+    page.title = "Підтвердження електронної пошти"
+    page.window.width = 900
+    page.window.height = 900
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
     email = REGISTER_DATA["email"]
@@ -23,7 +24,7 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     Auth.send_confirmation_email(email)
 
     confirmation_txt = ft.Text(
-        "Email Confirmation",
+        "Підтвердження електронної пошти",
         color=RC.LIGHT_YELLOW,
         size=22,
         weight=ft.FontWeight.W_800,
@@ -31,14 +32,14 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     info_text = ft.Text(
-        "A confirmation code has been sent to your email.",
+        "Код підтвердження надіслано на вашу пошту.",
         color=RC.LIGHT_YELLOW,
         size=14,
         text_align=ft.TextAlign.CENTER,
     )
 
     code_field = ft.TextField(
-        label="Confirmation code",
+        label="Код підтвердження",
         label_style=ft.TextStyle(color=RC.LIGHT_YELLOW),
         text_style=ft.TextStyle(color=RC.LIGHT_YELLOW),
         focused_border_color=RC.LIGHT_YELLOW,
@@ -56,7 +57,7 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     def submit_click(e: Any) -> None:
         code = code_field.value
         if not code:
-            show_notification("Будь ласка, введіть код підтвердження", RC.RED)
+            show_notification("Будь ласка, введіть код підтвердження")
             return
 
         try:
@@ -71,25 +72,25 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             page.go("/")
             page.views.clear()
         except UserAlreadyExistError:
-            show_notification("Користувач з таким ім'ям або email вже існує", RC.RED)
-        except ValueError as err:
+            show_notification("Користувач з таким ім'ям або email вже існує")
+        except ConfirmCodeError as err:
             if "Invalid confirmation code" in str(err):
-                show_notification("Невірний код підтвердження", RC.RED)
+                show_notification("Невірний код підтвердження")
             else:
-                show_notification(str(err), RC.RED)
+                show_notification(str(err))
 
     def resend_code(e: Any) -> None:
         try:
             Auth.send_confirmation_email(REGISTER_DATA["email"])
             show_notification("Новий код підтвердження надіслано на вашу електронну пошту")
         except Exception as err:
-            show_notification(f"Помилка при відправці коду: {err!s}", RC.RED)
+            show_notification(f"Помилка при відправці коду: {err!s}")
 
     def register(e: Any) -> None:
         page.go("/register")
 
     submit_button = ft.ElevatedButton(
-        "Submit code",
+        "Підтвердити код",
         on_click=submit_click,
         bgcolor=RC.SUPER_DARK_GREEN,
         color=RC.LIGHT_YELLOW,
@@ -98,13 +99,13 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     resend_code_button = ft.TextButton(
-        "Send code again",
+        "Надіслати код знову",
         on_click=resend_code,
         style=ft.ButtonStyle(color=ft.colors.WHITE),
     )
 
     register_button = ft.TextButton(
-        "Registration",
+        "Реєстрація",
         on_click=register,
         style=ft.ButtonStyle(color=ft.colors.WHITE),
     )
