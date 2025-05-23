@@ -41,7 +41,8 @@ def create_users_table() -> None:
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                salt BLOB
             )
             """
         )
@@ -75,3 +76,7 @@ def insert_user_default_categories(username: str) -> None:
             cursor.execute(f"INSERT OR IGNORE INTO {categories_table} (name) VALUES (?)", (category,))
         conn.commit()
     log.log("INFO", "Insert default categories")
+
+
+if __name__ == "__main__":
+    create_full_database()

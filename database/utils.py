@@ -5,15 +5,17 @@ from datetime import datetime
 from typing import Any
 
 from log.logger import log
-from security.utils import decrypt_data, encrypt_data
+from security.utils import decrypt_data, decrypt_data_user, encrypt_data, encrypt_data_user
 
 from .create_database import create_user_categories_table, create_user_expenses_table
 from .exceptions import CategoryAlreadyExistsError, UserAlreadyExistError
 
+DATABASE = "tracker.db"
+
 
 class Utils:
     @staticmethod
-    def add_user(username: str, email: str, password: str) -> None:
+    def add_user(username: str, email: str, password: str, salt) -> None:
         encrypted_email = encrypt_data(email)
         encrypted_password = encrypt_data(password)
 
@@ -21,8 +23,8 @@ class Utils:
             with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-                    (username, encrypted_email, encrypted_password),
+                    "INSERT INTO users (username, email, password, salt) VALUES (?, ?, ?, ?)",
+                    (username, encrypted_email, encrypted_password, salt),
                 )
                 conn.commit()
             create_user_expenses_table(username)
@@ -36,10 +38,10 @@ class Utils:
     @staticmethod
     def add_expense(username: str, category: str, amount: float, expense_date: str) -> None:
         table_name = f"expenses_{username}"
-        encrypted_amount = encrypt_data(str(amount))
-        encrypted_date = encrypt_data(expense_date)
+        encrypted_amount = encrypt_data_user(str(amount))
+        encrypted_date = encrypt_data_user(expense_date)
 
-        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"INSERT INTO {table_name} (category, amount, expense_date) VALUES (?, ?, ?)",
@@ -92,7 +94,7 @@ class Utils:
 
     @staticmethod
     def get_user_email(username: str) -> str:
-        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT email FROM users WHERE username = ?", (username,))
             encrypted_email = cursor.fetchone()[0]
@@ -103,6 +105,22 @@ class Utils:
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT email FROM users WHERE password = ?", (encrypt_data(password),))
+            result = cursor.fetchone()
+        return result[0] if result else None
+
+    @staticmethod
+    def get_user_id(username: str) -> str:
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,))
+            result = cursor.fetchone()
+        return result[0] if result else None
+
+    @staticmethod
+    def get_user_salt(username: str) -> str:
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT salt FROM users WHERE username = ?", (username,))
             result = cursor.fetchone()
         return result[0] if result else None
 
@@ -131,7 +149,7 @@ class Utils:
                 (category, month, year),
             )
             expenses = cursor.fetchall()
-        total = sum(float(decrypt_data(expense[0])) for expense in expenses)
+        total = sum(float(decrypt_data_user(expense[0])) for expense in expenses)
         log.log("INFO", f"Total expenses for {username} in category '{category}' in {month}/{year}: {total}")
         return total
 
@@ -149,7 +167,7 @@ class Utils:
                 (month, year),
             )
             expenses = cursor.fetchall()
-        total = sum(float(decrypt_data(expense[0])) for expense in expenses)
+        total = sum(float(decrypt_data_user(expense[0])) for expense in expenses)
         log.log("INFO", f"Total expenses for {username} in {month}/{year}: {total}")
         return total
 
@@ -177,10 +195,10 @@ class Utils:
 
         expenses = []
         for expense_id, amount, category, date_str in rows:
-            date = datetime.strptime(decrypt_data(date_str), "%d/%m/%Y")
+            date = datetime.strptime(decrypt_data_user(date_str), "%d/%m/%Y")
             expenses.append({
                 "expense_id": expense_id,
-                "amount": float(decrypt_data(amount)),
+                "amount": float(decrypt_data_user(amount)),
                 "category": category,
                 "date": date,
             })

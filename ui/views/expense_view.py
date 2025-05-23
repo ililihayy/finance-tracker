@@ -1,37 +1,103 @@
 from datetime import datetime
 from typing import Any
 
-import flet as ft  # type: ignore[import-not-found]
-from flet_route import Basket, Params  # type: ignore[import-not-found]
+import flet as ft
+from flet_route import Basket, Params
 
 from expenses import Expense
+
+
+class ExpColors:
+    DARK_GREEN = "#5D8736"
+    GREEN = "#809D3C"
+    LIGHT_GREEN = "#A9C46C"
+    LIGHT_YELLOW = "#F4FFC3"
+    SUPER_DARK_GREEN = "#0c3c0f"
+    WHITE = "#FFFFFF"
 
 
 def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Фінансовий трекер"
     page.theme_mode = ft.ThemeMode.SYSTEM
+    page.theme = ft.Theme(
+        color_scheme=ft.ColorScheme(
+            primary=ExpColors.GREEN,
+            on_primary=ExpColors.LIGHT_YELLOW,
+            surface=ExpColors.DARK_GREEN,
+            on_surface=ExpColors.LIGHT_YELLOW,
+        )
+    )
 
     categories = Expense.list_of_categories()
     selected_date = datetime.now()
 
     def add_category_click(e: Any):
-        Expense.add_category(new_category_input.value)
+        if new_category_input.value:
+            Expense.add_category(new_category_input.value)
+            category_dropdown.options.append(ft.dropdown.Option(new_category_input.value))
+            category_dropdown.value = new_category_input.value
+            new_category_input.value = ""
+            new_category_input.visible = False
+            page.update()
+
+    def toggle_new_category(e):
+        new_category_input.visible = not new_category_input.visible
+        page.update()
 
     def add_expense_click(e: Any):
-        Expense.add_expense(category_dropdown.value, float(expense_input.value), selected_date.strftime("%d/%m/%Y"))
-        print("add expense")
+        if category_dropdown.value and expense_input.value:
+            Expense.add_expense(category_dropdown.value, float(expense_input.value), selected_date.strftime("%d/%m/%Y"))
+            expense_input.value = ""
+            expense_list.controls = build_expense_rows()
+            page.update()
 
-        expense_list.controls = build_expense_rows()
-        expense_list.update()
+    expense_input = ft.TextField(
+        label="Сума витрати",
+        keyboard_type=ft.KeyboardType.NUMBER,
+        prefix_text="₴",
+        width=200,
+        border_color=ExpColors.LIGHT_YELLOW,
+        focused_border_color=ExpColors.LIGHT_GREEN,
+        color=ExpColors.LIGHT_YELLOW,
+        cursor_color=ExpColors.LIGHT_YELLOW,
+        label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+    )
 
-    expense_input = ft.TextField(label="Сума витрати", keyboard_type=ft.KeyboardType.NUMBER, prefix_text="₴", width=200)
-    new_category_input = ft.TextField(label="Нова категорія", width=200, visible=False)
-    category_dropdown = ft.Dropdown(label="Категорія", width=200, options=[ft.dropdown.Option(c) for c in categories])
-    add_category_button = ft.IconButton(icon=ft.icons.ADD, tooltip="Додати нову категорію", on_click=add_category_click)
-    date_display = ft.Text(f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16)
-    add_expense_button = ft.FilledButton("Додати витрату", on_click=add_expense_click)
+    new_category_input = ft.TextField(
+        label="Нова категорія",
+        width=200,
+        visible=False,
+        border_color=ExpColors.LIGHT_YELLOW,
+        focused_border_color=ExpColors.LIGHT_GREEN,
+        color=ExpColors.LIGHT_YELLOW,
+        cursor_color=ExpColors.LIGHT_YELLOW,
+        label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+    )
 
-    # Date select
+    category_dropdown = ft.Dropdown(
+        label="Категорія",
+        width=200,
+        options=[ft.dropdown.Option(c) for c in categories],
+        border_color=ExpColors.LIGHT_YELLOW,
+        focused_border_color=ExpColors.LIGHT_GREEN,
+        color=ExpColors.LIGHT_YELLOW,
+        label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+    )
+
+    add_category_button = ft.IconButton(
+        icon=ft.icons.ADD,
+        tooltip="Додати нову категорію",
+        on_click=toggle_new_category,
+        icon_color=ExpColors.LIGHT_YELLOW,
+    )
+
+    date_display = ft.Text(f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
+
+    add_expense_button = ft.FilledButton(
+        "Додати витрату",
+        on_click=add_expense_click,
+        style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+    )
 
     def handle_change(e):
         nonlocal selected_date
@@ -41,10 +107,10 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             page.update()
 
     def handle_dismissal(e):
-        page.add(ft.Text("DatePicker dismissed"))
+        pass
 
     date_icon_button = ft.ElevatedButton(
-        "Pick date",
+        "Обрати дату",
         icon=ft.icons.CALENDAR_MONTH,
         on_click=lambda e: page.open(
             ft.DatePicker(
@@ -54,6 +120,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 on_dismiss=handle_dismissal,
             )
         ),
+        style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
     )
 
     def delete_expense(expense_id: int):
@@ -71,17 +138,24 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 [
                     ft.Column(
                         [
-                            ft.Text(f"{expense['category']} - {expense['amount']:.2f} ₴", size=16),
-                            ft.Text(f"Дата: {expense['date'].strftime('%Y-%m-%d')}", size=14),
-                            ft.Text("______________________________________________________________"),
+                            ft.Text(
+                                f"{expense['category']} - {expense['amount']:.2f} ₴",
+                                size=16,
+                                color=ExpColors.LIGHT_YELLOW,
+                            ),
+                            ft.Text(
+                                f"Дата: {expense['date'].strftime('%Y-%m-%d')}", size=14, color=ExpColors.LIGHT_GREEN
+                            ),
+                            ft.Divider(color=ExpColors.LIGHT_GREEN, height=1),
                         ],
                         expand=True,
                     ),
-                    ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати"),
+                    ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати", icon_color=ExpColors.LIGHT_YELLOW),
                     ft.IconButton(
                         icon=ft.icons.DELETE,
                         tooltip="Видалити",
                         on_click=lambda e, id=expense["expense_id"]: delete_expense(id),
+                        icon_color=ExpColors.LIGHT_YELLOW,
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -94,10 +168,34 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         width=400,
         height=400,
         sections=[
-            ft.PieChartSection(value=40, title="Їжа", color=ft.colors.BLUE),
-            ft.PieChartSection(value=25, title="Транспорт", color=ft.colors.GREEN),
-            ft.PieChartSection(value=15, title="Розваги", color=ft.colors.ORANGE),
-            ft.PieChartSection(value=20, title="Інше", color=ft.colors.GREY),
+            ft.PieChartSection(
+                value=40,
+                title="Їжа",
+                color=ExpColors.LIGHT_GREEN,
+                radius=100,
+                title_style=ft.TextStyle(color=ExpColors.SUPER_DARK_GREEN, size=12),
+            ),
+            ft.PieChartSection(
+                value=25,
+                title="Транспорт",
+                color=ExpColors.GREEN,
+                radius=100,
+                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
+            ),
+            ft.PieChartSection(
+                value=15,
+                title="Розваги",
+                color=ExpColors.DARK_GREEN,
+                radius=100,
+                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
+            ),
+            ft.PieChartSection(
+                value=20,
+                title="Інше",
+                color=ExpColors.SUPER_DARK_GREEN,
+                radius=100,
+                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
+            ),
         ],
         expand=True,
     )
@@ -105,7 +203,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     add_expense_container = ft.Container(
         content=ft.Column(
             [
-                ft.Text("Додати нову витрату", size=20, weight="bold"),
+                ft.Text("Додати нову витрату", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW),
                 expense_input,
                 ft.Row([category_dropdown, add_category_button]),
                 new_category_input,
@@ -115,65 +213,95 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             spacing=10,
         ),
         padding=20,
-        border=ft.border.all(1, ft.colors.OUTLINE),
+        border=ft.border.all(1, ExpColors.LIGHT_GREEN),
         border_radius=10,
         margin=10,
+        bgcolor=ExpColors.DARK_GREEN,
     )
 
     expense_list = ft.ListView(spacing=10, padding=20, auto_scroll=True, expand=True)
     expense_list.controls = build_expense_rows()
 
     expenses_history_container = ft.Container(
-        content=ft.Column([ft.Text("Історія витрат", size=20, weight="bold"), expense_list], spacing=10, expand=True),
+        content=ft.Column(
+            [ft.Text("Історія витрат", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW), expense_list],
+            spacing=10,
+            expand=True,
+        ),
         expand=True,
         padding=20,
-        border=ft.border.all(1, ft.colors.OUTLINE),
+        border=ft.border.all(1, ExpColors.LIGHT_GREEN),
         border_radius=10,
         margin=10,
+        bgcolor=ExpColors.DARK_GREEN,
     )
 
     summary_dialog = ft.AlertDialog(
-        title=ft.Text("Підсумки витрат"),
+        title=ft.Text("Підсумки витрат", color=ExpColors.LIGHT_YELLOW),
         content=ft.Column([
-            ft.Text("Загальна сума витрат: 450.00 ₴", size=18, weight="bold"),
-            ft.Divider(),
-            ft.Text("Витрати по категоріях:", size=16),
-            ft.Text("Їжа: 250.00 ₴ (55.6%)"),
-            ft.Text("Транспорт: 120.00 ₴ (26.7%)"),
-            ft.Text("Розваги: 80.00 ₴ (17.8%)"),
-            ft.Divider(),
-            ft.Text("Витрати за останній тиждень: 300.00 ₴", size=16),
+            ft.Text("Загальна сума витрат: 450.00 ₴", size=18, weight="bold", color=ExpColors.LIGHT_YELLOW),
+            ft.Divider(color=ExpColors.LIGHT_GREEN),
+            ft.Text("Витрати по категоріях:", size=16, color=ExpColors.LIGHT_YELLOW),
+            ft.Text("Їжа: 250.00 ₴ (55.6%)", color=ExpColors.LIGHT_GREEN),
+            ft.Text("Транспорт: 120.00 ₴ (26.7%)", color=ExpColors.LIGHT_GREEN),
+            ft.Text("Розваги: 80.00 ₴ (17.8%)", color=ExpColors.LIGHT_GREEN),
+            ft.Divider(color=ExpColors.LIGHT_GREEN),
+            ft.Text("Витрати за останній тиждень: 300.00 ₴", size=16, color=ExpColors.LIGHT_YELLOW),
         ]),
-        actions=[ft.TextButton("Закрити")],
+        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
+        bgcolor=ExpColors.DARK_GREEN,
     )
 
     profile_dialog = ft.AlertDialog(
-        title=ft.Text("Профіль користувача"),
+        title=ft.Text("Профіль користувача", color=ExpColors.LIGHT_YELLOW),
         content=ft.Column(
             [
-                ft.TextField(label="Ваше ім'я", value="Користувач"),
                 ft.TextField(
-                    label="Місячний бюджет", keyboard_type=ft.KeyboardType.NUMBER, prefix_text="₴", value="10000"
+                    label="Ваше ім'я",
+                    value="Користувач",
+                    border_color=ExpColors.LIGHT_YELLOW,
+                    focused_border_color=ExpColors.LIGHT_GREEN,
+                    color=ExpColors.LIGHT_YELLOW,
+                    cursor_color=ExpColors.LIGHT_YELLOW,
+                    label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
                 ),
-                ft.FilledButton("Зберегти налаштування"),
+                ft.TextField(
+                    label="Місячний бюджет",
+                    keyboard_type=ft.KeyboardType.NUMBER,
+                    prefix_text="₴",
+                    value="10000",
+                    border_color=ExpColors.LIGHT_YELLOW,
+                    focused_border_color=ExpColors.LIGHT_GREEN,
+                    color=ExpColors.LIGHT_YELLOW,
+                    cursor_color=ExpColors.LIGHT_YELLOW,
+                    label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+                ),
+                ft.FilledButton(
+                    "Зберегти налаштування", style=ft.ButtonStyle(bgcolor=ExpColors.GREEN, color=ExpColors.LIGHT_YELLOW)
+                ),
             ],
             spacing=10,
         ),
-        actions=[ft.TextButton("Закрити")],
+        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
+        bgcolor=ExpColors.DARK_GREEN,
     )
 
     app_bar = ft.AppBar(
-        title=ft.Text("Фінансовий трекер"),
+        title=ft.Text("Фінансовий трекер", color=ExpColors.LIGHT_YELLOW),
         center_title=True,
-        bgcolor=ft.colors.SURFACE_VARIANT,
+        bgcolor=ExpColors.SUPER_DARK_GREEN,
         actions=[
             ft.IconButton(
                 icon=ft.icons.SUMMARIZE,
                 tooltip="Підсумки витрат",
-                on_click=lambda _: page.dialogs.append(summary_dialog),
+                on_click=lambda _: page.show_dialog(summary_dialog),
+                icon_color=ExpColors.LIGHT_YELLOW,
             ),
             ft.IconButton(
-                icon=ft.icons.PERSON, tooltip="Профіль", on_click=lambda _: page.dialogs.append(profile_dialog)
+                icon=ft.icons.PERSON,
+                tooltip="Профіль",
+                on_click=lambda _: page.show_dialog(profile_dialog),
+                icon_color=ExpColors.LIGHT_YELLOW,
             ),
         ],
     )
@@ -192,15 +320,35 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 icon=ft.icons.PIE_CHART,
                 content=ft.Container(
                     content=ft.Column(
-                        [ft.Text("Розподіл витрат по категоріях", size=20, weight="bold"), pie_chart],
+                        [
+                            ft.Text(
+                                "Розподіл витрат по категоріях", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW
+                            ),
+                            pie_chart,
+                        ],
                         alignment=ft.MainAxisAlignment.START,
                         spacing=20,
                     ),
                     padding=20,
                     expand=True,
+                    bgcolor=ExpColors.DARK_GREEN,
                 ),
             ),
         ],
+        indicator_color=ExpColors.LIGHT_GREEN,
+        label_color=ExpColors.LIGHT_YELLOW,
+        unselected_label_color=ExpColors.LIGHT_GREEN,
+        divider_color=ExpColors.LIGHT_GREEN,
+    )
+
+    main_container = ft.Container(
+        content=ft.Column([app_bar, tabs], expand=True),
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_center,
+            end=ft.alignment.bottom_center,
+            colors=[ExpColors.SUPER_DARK_GREEN, ExpColors.DARK_GREEN],
+        ),
+        expand=True,
     )
 
     return ft.View(

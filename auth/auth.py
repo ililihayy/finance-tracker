@@ -7,7 +7,6 @@ from email.mime.text import MIMEText
 import bcrypt  # type: ignore[import-not-found]
 from dotenv import load_dotenv
 
-from database.utils import Utils as Db_utils
 from log.logger import log
 
 from .exceptions import ConfirmCodeError, InvalidCredentialsError
@@ -18,6 +17,7 @@ load_dotenv()
 class Auth:
     current_user: str | None = None
     confirmation_code: str | None = None
+    ENCRYPTION_KEY_USER = None
 
     @staticmethod
     def generate_confirmation_code() -> str:
@@ -58,17 +58,25 @@ class Auth:
     @staticmethod
     def register_user(username: str, email: str, password: str, user_code: str) -> None:
         if user_code == Auth.confirmation_code:
-            Db_utils.add_user(username, email, password)
+            from database.utils import Utils as Db_utils
+            from security.user_key import ensure_encryption_key, generate_salt_bytes
+
+            salt = generate_salt_bytes()
+            Db_utils.add_user(username, email, password, salt)
+            ensure_encryption_key(username)
         else:
             raise ConfirmCodeError("The verification code is incorrect")
 
     @staticmethod
     def login_user(identifier: str, password: str) -> None:
+        from database.utils import Utils as Db_utils
+
         user_password = Db_utils.get_user_password(identifier)
 
         if Auth.check_password(user_password, password):
             log.log("INFO", f"User '{identifier}' logged in successfully.")
             Auth.current_user = identifier
+            Auth.ENCRYPTION_KEY_USER = f"ENCRYPTION_KEY_{identifier}"
         else:
             log.log("ERROR", "Invalid credentials")
             raise InvalidCredentialsError("Invalid username/email or password")

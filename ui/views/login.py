@@ -10,13 +10,13 @@ from colors import LC
 
 
 def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
-    page.title = "Login"
+    page.title = "Логін"
     page.window.width = 800
     page.window.height = 600
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
 
     title = ft.Text(
-        "Welcome to Finance Tracker!",
+        "Вітаємо в Трекері Фінансів!",
         color=LC.LIGHT_YELLOW,
         size=24,
         weight=ft.FontWeight.BOLD,
@@ -24,17 +24,17 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     login_txt = ft.Text(
-        "Login", color=LC.LIGHT_YELLOW, size=22, weight=ft.FontWeight.W_800, text_align=ft.TextAlign.CENTER
+        "Логін", color=LC.LIGHT_YELLOW, size=22, weight=ft.FontWeight.W_800, text_align=ft.TextAlign.CENTER
     )
 
     username = ft.TextField(
-        label="Username",
+        label="Нікнейм",
         label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         text_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         focused_border_color=LC.LIGHT_YELLOW,
     )
     password = ft.TextField(
-        label="Password",
+        label="Пароль",
         password=True,
         can_reveal_password=True,
         label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
@@ -42,15 +42,30 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         focused_border_color=LC.LIGHT_YELLOW,
     )
 
+    # Лічильник спроб
+    attempts = 0
+
     def login_click(e: Any) -> None:
+        nonlocal attempts
         username_val = username.value
+        if attempts >= 3:
+            page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
+            page.update()
+            return
+
         try:
             Auth.login_user(username_val, password.value)
-            page.open(ft.SnackBar(ft.Text("Login successfully!")))
+            page.open(ft.SnackBar(ft.Text("Логін успішний!")))
             page.update()
             page.go("/expenses")
         except Exception:
-            page.open(ft.SnackBar(ft.Text("Password or username is incorrect.")))
+            attempts += 1
+            if attempts < 3:
+                page.open(
+                    ft.SnackBar(ft.Text(f"Пароль або ім'я користувача неправильні. Залишилось спроб: {3 - attempts}"))
+                )
+            else:
+                page.open(ft.SnackBar(ft.Text("Обліковий запис заблоковано. Спробуйте скинути пароль.")))
             page.update()
 
     def forgot_password(e: Any) -> None:
@@ -65,17 +80,24 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     )
 
     forgot_button = ft.ElevatedButton(
-        "Forgot password",
+        "Забув пароль",
         on_click=forgot_password,
         bgcolor=ft.colors.TRANSPARENT,
         color=LC.LIGHT_YELLOW,
     )
 
     register_button = ft.ElevatedButton(
-        "Registration",
+        "Реєстрація",
         on_click=register,
         bgcolor=ft.colors.TRANSPARENT,
         color=LC.LIGHT_YELLOW,
+    )
+
+    attempt_text = ft.Text(
+        "Спробувати можна тільки 3 рази. У разі невдачі ваш обліковий запис буде заблоковано.",
+        color=LC.LIGHT_YELLOW,
+        size=12,
+        text_align=ft.TextAlign.CENTER,
     )
 
     container = ft.Container(
@@ -85,6 +107,7 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 password,
                 ft.Row([login_button], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([forgot_button, register_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                attempt_text,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
