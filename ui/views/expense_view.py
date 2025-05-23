@@ -1,4 +1,5 @@
-from datetime import datetime
+from calendar import monthrange
+from datetime import datetime, timedelta
 from typing import Any
 
 import flet as ft
@@ -14,6 +15,197 @@ class ExpColors:
     LIGHT_YELLOW = "#F4FFC3"
     SUPER_DARK_GREEN = "#0c3c0f"
     WHITE = "#FFFFFF"
+
+    # Chart colors
+    CHART_COLORS = [
+        "#FF6B6B",  # Coral Red
+        "#4ECDC4",  # Turquoise
+        "#45B7D1",  # Sky Blue
+        "#96CEB4",  # Sage Green
+        "#FFEEAD",  # Cream Yellow
+        "#D4A5A5",  # Dusty Rose
+        "#9B59B6",  # Purple
+        "#3498DB",  # Blue
+        "#E67E22",  # Orange
+        "#2ECC71",  # Emerald
+        "#F1C40F",  # Yellow
+        "#1ABC9C",  # Teal
+    ]
+
+
+class MonthlyStatsView:
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.current_date = datetime.now()
+        self.current_month = self.current_date.month
+        self.current_year = self.current_date.year
+        self.color_index = 0
+        self.container = None  # Store reference to the container for updates
+
+    def get_next_color(self) -> str:
+        color = ExpColors.CHART_COLORS[self.color_index]
+        self.color_index = (self.color_index + 1) % len(ExpColors.CHART_COLORS)
+        return color
+
+    def get_monthly_expenses(self) -> dict[str, float]:
+        start_date = datetime(self.current_year, self.current_month, 1)
+        _, last_day = monthrange(self.current_year, self.current_month)
+        end_date = datetime(self.current_year, self.current_month, last_day)
+
+        expenses = Expense.get_expenses_by_date_range(start_date, end_date)
+        category_totals = {}
+
+        # Only add categories that have expenses
+        for expense in expenses:
+            category = expense["category"]
+            amount = float(expense["amount"])
+            if amount > 0:  # Only include categories with expenses
+                category_totals[category] = category_totals.get(category, 0) + amount
+
+        return category_totals
+
+    def update_view(self):
+        """Update the monthly view with current data"""
+        if self.container:
+            self.container.content = self.build_monthly_content()
+            self.page.update()
+
+    def build_monthly_content(self) -> ft.Column:
+        expenses = self.get_monthly_expenses()
+        total_amount = sum(expenses.values())
+
+        # Reset color index for new chart
+        self.color_index = 0
+
+        # Create pie chart sections only for categories with expenses
+        sections = []
+        for category, amount in expenses.items():
+            if amount > 0:  # Only add sections for categories with expenses
+                percentage = (amount / total_amount * 100) if total_amount > 0 else 0
+                sections.append(
+                    ft.PieChartSection(
+                        value=percentage,
+                        title=category,
+                        color=self.get_next_color(),
+                        radius=100,
+                        title_style=ft.TextStyle(color=ExpColors.SUPER_DARK_GREEN, size=12, weight=ft.FontWeight.BOLD),
+                    )
+                )
+
+        # Create category summary only for categories with expenses
+        self.color_index = 0  # Reset color index for summary
+
+        # Create month navigation buttons
+        def change_month(delta: int):
+            new_date = datetime(self.current_year, self.current_month, 1) + timedelta(days=32 * delta)
+            self.current_month = new_date.month
+            self.current_year = new_date.year
+            self.current_date = new_date
+            self.update_view()
+
+        month_navigation = ft.Row(
+            [
+                ft.IconButton(
+                    icon=ft.icons.ARROW_BACK_IOS, on_click=lambda _: change_month(-1), icon_color=ExpColors.LIGHT_YELLOW
+                ),
+                ft.Text(self.current_date.strftime("%B %Y"), size=20, color=ExpColors.LIGHT_YELLOW),
+                ft.IconButton(
+                    icon=ft.icons.ARROW_FORWARD_IOS,
+                    on_click=lambda _: change_month(1),
+                    icon_color=ExpColors.LIGHT_YELLOW,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
+
+        # Create empty state message if no expenses
+        empty_state = (
+            ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Icon(name=ft.icons.PIE_CHART_OUTLINE, size=64, color=ExpColors.LIGHT_YELLOW),
+                        ft.Text(
+                            "Немає витрат за цей місяць",
+                            size=20,
+                            color=ExpColors.LIGHT_YELLOW,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=20,
+                ),
+                alignment=ft.alignment.center,
+                expand=True,
+            )
+            if total_amount == 0
+            else None
+        )
+
+        category_summary = ft.Column(
+            [
+                ft.Text(f"{self.current_date.strftime('%B %Y')}", size=24, weight="bold", color=ExpColors.LIGHT_YELLOW),
+                ft.Text(f"Загальна сума: {total_amount:.2f} ₴", size=18, color=ExpColors.LIGHT_YELLOW),
+                ft.Divider(color=ExpColors.LIGHT_GREEN),
+            ]
+            + [
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Container(
+                                width=20,
+                                height=20,
+                                bgcolor=self.get_next_color(),
+                                border_radius=5,
+                            ),
+                            ft.Text(
+                                f"{category}: {amount:.2f} ₴ ({(amount / total_amount * 100 if total_amount > 0 else 0.0):.1f}%)",
+                                color=ExpColors.LIGHT_GREEN,
+                                size=16,
+                            ),
+                        ],
+                        spacing=10,
+                    ),
+                    padding=ft.padding.only(left=10, right=10, top=5, bottom=5),
+                )
+                for category, amount in expenses.items()
+                if amount > 0  # Only show categories with expenses
+            ],
+            spacing=10,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True,
+        )
+
+        return ft.Column(
+            [
+                month_navigation,
+                ft.Row(
+                    [
+                        ft.Container(
+                            content=empty_state or ft.PieChart(sections=sections, width=400, height=400, expand=True),
+                            expand=True,
+                            alignment=ft.alignment.center,
+                        ),
+                        ft.Container(
+                            content=category_summary,
+                            padding=20,
+                            border=ft.border.all(1, ExpColors.LIGHT_GREEN),
+                            border_radius=10,
+                            expand=True,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    expand=True,
+                ),
+            ],
+            spacing=20,
+            expand=True,
+        )
+
+    def build_monthly_view(self) -> ft.Container:
+        self.container = ft.Container(
+            content=self.build_monthly_content(), padding=20, expand=True, bgcolor=ExpColors.DARK_GREEN
+        )
+        return self.container
 
 
 def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
@@ -49,6 +241,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             Expense.add_expense(category_dropdown.value, float(expense_input.value), selected_date.strftime("%d/%m/%Y"))
             expense_input.value = ""
             expense_list.controls = build_expense_rows()
+            monthly_stats.update_view()  # Update monthly stats when new expense is added
             page.update()
 
     expense_input = ft.TextField(
@@ -126,6 +319,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     def delete_expense(expense_id: int):
         Expense.delete_expense(expense_id)
         expense_list.controls = build_expense_rows()
+        monthly_stats.update_view()  # Update monthly stats when expense is deleted
         expense_list.update()
 
     def build_expense_rows():
@@ -163,42 +357,6 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             rows.append(row)
 
         return rows
-
-    pie_chart = ft.PieChart(
-        width=400,
-        height=400,
-        sections=[
-            ft.PieChartSection(
-                value=40,
-                title="Їжа",
-                color=ExpColors.LIGHT_GREEN,
-                radius=100,
-                title_style=ft.TextStyle(color=ExpColors.SUPER_DARK_GREEN, size=12),
-            ),
-            ft.PieChartSection(
-                value=25,
-                title="Транспорт",
-                color=ExpColors.GREEN,
-                radius=100,
-                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
-            ),
-            ft.PieChartSection(
-                value=15,
-                title="Розваги",
-                color=ExpColors.DARK_GREEN,
-                radius=100,
-                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
-            ),
-            ft.PieChartSection(
-                value=20,
-                title="Інше",
-                color=ExpColors.SUPER_DARK_GREEN,
-                radius=100,
-                title_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW, size=12),
-            ),
-        ],
-        expand=True,
-    )
 
     add_expense_container = ft.Container(
         content=ft.Column(
@@ -306,6 +464,8 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         ],
     )
 
+    monthly_stats = MonthlyStatsView(page)
+
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -316,23 +476,9 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 content=ft.Column([add_expense_container, expenses_history_container], spacing=10, expand=True),
             ),
             ft.Tab(
-                text="Діаграма",
-                icon=ft.icons.PIE_CHART,
-                content=ft.Container(
-                    content=ft.Column(
-                        [
-                            ft.Text(
-                                "Розподіл витрат по категоріях", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW
-                            ),
-                            pie_chart,
-                        ],
-                        alignment=ft.MainAxisAlignment.START,
-                        spacing=20,
-                    ),
-                    padding=20,
-                    expand=True,
-                    bgcolor=ExpColors.DARK_GREEN,
-                ),
+                text="Місячна статистика",
+                icon=ft.icons.CALENDAR_MONTH,
+                content=monthly_stats.build_monthly_view(),
             ),
         ],
         indicator_color=ExpColors.LIGHT_GREEN,
