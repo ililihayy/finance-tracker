@@ -3,7 +3,6 @@
 from cryptography.fernet import Fernet
 
 from auth.auth import Auth
-
 from .key import get_encryption_key
 from .user_key import get_user_encryption_key
 

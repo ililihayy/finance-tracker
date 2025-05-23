@@ -1,11 +1,10 @@
 # Copyright (c) 2025 ililihayy. All rights reserved.
 
-import os
 import sqlite3
 
 from log.logger import log
 
-path = os.getenv("FT_DATABASE_PATH", "tracker.db")  # дефолт на випадок відсутності змінної
+path = "tracker.db"  # дефолт на випадок відсутності змінної
 
 
 def create_full_database() -> None:
@@ -79,5 +78,5 @@ def insert_user_default_categories(username: str) -> None:
     log.log("INFO", "Insert default categories")
 
 
-if __name__ == "__main__":
-    create_full_database()
+# if __name__ == "__main__":
+#     create_full_database()

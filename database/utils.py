@@ -4,11 +4,10 @@ import sqlite3
 from datetime import datetime
 from typing import Any
 
-from log.logger import log
-from security.utils import decrypt_data, decrypt_data_user, encrypt_data, encrypt_data_user
-
 from .create_database import create_user_categories_table, create_user_expenses_table
 from .exceptions import CategoryAlreadyExistsError, UserAlreadyExistError
+from log.logger import log
+from security.utils import decrypt_data, decrypt_data_user, encrypt_data, encrypt_data_user
 
 DATABASE = "tracker.db"
 

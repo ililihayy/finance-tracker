@@ -8,7 +8,6 @@ from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
 from colors import RC
-
 from . import confirmation as conf
 
 

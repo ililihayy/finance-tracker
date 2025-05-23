@@ -7,9 +7,8 @@ from email.mime.text import MIMEText
 import bcrypt  # type: ignore[import-not-found]
 from dotenv import load_dotenv
 
-from log.logger import log
-
 from .exceptions import ConfirmCodeError, InvalidCredentialsError
+from log.logger import log
 
 load_dotenv()
 
