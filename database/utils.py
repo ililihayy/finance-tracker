@@ -30,13 +30,10 @@ class Utils:
             create_user_expenses_table(username)
             create_user_categories_table(username)
 
-            log.log(
-                "INFO", f"Add user '{username}' with email '{encrypted_email}'")
+            log.log("INFO", f"Add user '{username}' with email '{encrypted_email}'")
         except sqlite3.IntegrityError as err:
-            log.log(
-                "ERROR", f"User '{username}' or email '{encrypted_email}' already exists")
-            raise UserAlreadyExistError(
-                f"User {username} or email {encrypted_email} already exists") from err
+            log.log("ERROR", f"User '{username}' or email '{encrypted_email}' already exists")
+            raise UserAlreadyExistError(f"User {username} or email {encrypted_email} already exists") from err
 
     @staticmethod
     def add_expense(username: str, category: str, amount: float, expense_date: str) -> None:
@@ -51,23 +48,19 @@ class Utils:
                 (category, encrypted_amount, encrypted_date),
             )
             conn.commit()
-        log.log(
-            "INFO", f"Add expense {username} - {category} - {encrypted_amount} - {encrypted_date}")
+        log.log("INFO", f"Add expense {username} - {category} - {encrypted_amount} - {encrypted_date}")
 
     @staticmethod
     def add_user_category(username: str, category_name: str) -> None:
         categories_table = f"categories_{username}"
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                f"SELECT COUNT(*) FROM {categories_table} WHERE name = ?", (category_name,))
+            cursor.execute(f"SELECT COUNT(*) FROM {categories_table} WHERE name = ?", (category_name,))
             if cursor.fetchone()[0] > 0:
                 log.log("ERROR", f"Category '{category_name}' exists")
-                raise CategoryAlreadyExistsError(
-                    f"Category '{category_name}' exists")
+                raise CategoryAlreadyExistsError(f"Category '{category_name}' exists")
 
-            cursor.execute(
-                f"INSERT INTO {categories_table} (name) VALUES (?)", (category_name,))
+            cursor.execute(f"INSERT INTO {categories_table} (name) VALUES (?)", (category_name,))
             conn.commit()
         log.log("INFO", f"Add category for {username} - {category_name}")
 
@@ -103,8 +96,7 @@ class Utils:
     def get_user_email(username: str) -> str:
         with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT email FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT email FROM users WHERE username = ?", (username,))
             encrypted_email = cursor.fetchone()[0]
         return decrypt_data(encrypted_email)
 
@@ -112,8 +104,7 @@ class Utils:
     def get_user_name(password: str) -> str:
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT email FROM users WHERE password = ?", (encrypt_data(password),))
+            cursor.execute("SELECT email FROM users WHERE password = ?", (encrypt_data(password),))
             result = cursor.fetchone()
         return result[0] if result else None
 
@@ -121,8 +112,7 @@ class Utils:
     def get_user_id(username: str) -> str:
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT user_id FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,))
             result = cursor.fetchone()
         return result[0] if result else None
 
@@ -130,8 +120,7 @@ class Utils:
     def get_user_salt(username: str) -> str:
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT salt FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT salt FROM users WHERE username = ?", (username,))
             result = cursor.fetchone()
         return result[0] if result else None
 
@@ -140,8 +129,7 @@ class Utils:
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT password FROM users WHERE username = ? or email = ?", (
-                    identifier, encrypt_data(identifier))
+                "SELECT password FROM users WHERE username = ? or email = ?", (identifier, encrypt_data(identifier))
             )
             result = cursor.fetchone()
         return decrypt_data(result[0]) if result else None
@@ -161,10 +149,8 @@ class Utils:
                 (category, month, year),
             )
             expenses = cursor.fetchall()
-        total = sum(float(decrypt_data_user(
-            expense[0])) for expense in expenses)
-        log.log(
-            "INFO", f"Total expenses for {username} in category '{category}' in {month}/{year}: {total}")
+        total = sum(float(decrypt_data_user(expense[0])) for expense in expenses)
+        log.log("INFO", f"Total expenses for {username} in category '{category}' in {month}/{year}: {total}")
         return total
 
     @staticmethod
@@ -181,10 +167,8 @@ class Utils:
                 (month, year),
             )
             expenses = cursor.fetchall()
-        total = sum(float(decrypt_data_user(
-            expense[0])) for expense in expenses)
-        log.log(
-            "INFO", f"Total expenses for {username} in {month}/{year}: {total}")
+        total = sum(float(decrypt_data_user(expense[0])) for expense in expenses)
+        log.log("INFO", f"Total expenses for {username} in {month}/{year}: {total}")
         return total
 
     @staticmethod
@@ -226,8 +210,7 @@ class Utils:
         table_name = f"expenses_{username}"
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                f"DELETE FROM {table_name} WHERE expense_id = ?", (expense_id,))
+            cursor.execute(f"DELETE FROM {table_name} WHERE expense_id = ?", (expense_id,))
             conn.commit()
 
     @staticmethod
@@ -245,11 +228,55 @@ class Utils:
             )
             conn.commit()
 
+    @staticmethod
     def block_user(username: str):
         with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                f"""UPDATE users SET is_blocked = ?,  WHERE username = ?""", (
-                    True, username),
+                """UPDATE users SET is_blocked = ? WHERE username = ?""",
+                (1, username),
             )
+            print(f"Blocked: {cursor.rowcount} rows updated")
             conn.commit()
+
+    @staticmethod
+    def unblock_user(username: str):
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """UPDATE users SET is_blocked = ? WHERE username = ?""",
+                (False, username),
+            )
+            print(f"Unblocked: {cursor.rowcount} rows updated")
+            conn.commit()
+
+    @staticmethod
+    def get_user_status(identifier: str) -> bool | None:
+        with sqlite3.connect("tracker.db", check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT is_blocked FROM users WHERE username = ?", (identifier,))
+            result = cursor.fetchone()
+        if result is None:
+            return None  # Користувача не знайдено
+        return bool(result[0])
+
+    @staticmethod
+    def update_user_password(username: str, new_password: str) -> None:
+        """Update user's password in the database."""
+        encrypted_password = encrypt_data(new_password)
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET password = ? WHERE username = ?", (encrypted_password, username))
+            conn.commit()
+        log.log("INFO", f"Updated password for user '{username}'")
+
+    @staticmethod
+    def get_username_by_email(email: str) -> str | None:
+        """Get username by email address."""
+        encrypted_email = encrypt_data(email)
+        print("email  ", encrypted_email)
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT username FROM users WHERE email = ?", (encrypted_email,))
+            result = cursor.fetchone()
+        return result[0] if result else None

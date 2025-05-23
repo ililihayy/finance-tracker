@@ -18,6 +18,7 @@ class Auth:
     current_user: str | None = None
     confirmation_code: str | None = None
     ENCRYPTION_KEY_USER = None
+    blocked_user: str | None = None
 
     @staticmethod
     def generate_confirmation_code() -> str:
@@ -32,13 +33,21 @@ class Auth:
         return bcrypt.checkpw(password.encode("utf-8"), stored_hash.encode("utf-8"))
 
     @staticmethod
+    def verify_email_exists(email: str) -> bool:
+        """Verify if email exists in the database."""
+        from database.utils import Utils as Db_utils
+
+        username = Db_utils.get_username_by_email(email)
+        return username is not None
+
+    @staticmethod
     def send_confirmation_email(email: str) -> None:
         Auth.confirmation_code = Auth.generate_confirmation_code()
         sender_email = "liliworkgames@gmail.com"
         password = os.getenv("GMAIL_KEY") or ""
         receiver_email = email
-        subject = "Email Confirmation from Finance Tracker!"
-        body = f"Your confirmation code is: {Auth.confirmation_code}"
+        subject = "Підтвердження зміни паролю - Finance Tracker"
+        body = f"Ваш код підтвердження: {Auth.confirmation_code}"
 
         msg = MIMEMultipart()
         msg["From"] = sender_email
@@ -54,6 +63,7 @@ class Auth:
             log.log("INFO", f"Confirmation email sent to {email}")
         except Exception as e:
             log.log("ERROR", f"Failed to send email: {e!s}")
+            raise ValueError("Помилка при відправці коду підтвердження") from e
 
     @staticmethod
     def register_user(username: str, email: str, password: str, user_code: str) -> None:
@@ -80,3 +90,41 @@ class Auth:
         else:
             log.log("ERROR", "Invalid credentials")
             raise InvalidCredentialsError("Invalid username/email or password")
+
+    @staticmethod
+    def verify_confirmation_code(email: str, code: str) -> bool:
+        """Verify if the provided code matches the sent confirmation code."""
+        if Auth.confirmation_code is None:
+            log.log("ERROR", "No confirmation code was generated")
+            return False
+
+        is_valid = code == Auth.confirmation_code
+        if not is_valid:
+            log.log("ERROR", f"Invalid confirmation code for email {email}")
+
+        return is_valid
+
+    @staticmethod
+    def reset_password(email: str, code: str, new_password: str) -> None:
+        """Reset user password after code verification."""
+        from database.utils import Utils as Db_utils
+
+        if not code:
+            log.log("ERROR", "No confirmation code provided")
+            raise ValueError("Будь ласка, введіть код підтвердження")
+
+        username = Auth.blocked_user
+        if not username:
+            log.log("ERROR", f"User not found for email {email}")
+            raise ValueError("Користувача з такою електронною поштою не знайдено")
+
+        if not Auth.verify_confirmation_code(email, code):
+            log.log("ERROR", f"Invalid confirmation code for email {email}")
+            raise ConfirmCodeError("Невірний код підтвердження")
+
+        try:
+            Db_utils.update_user_password(username, new_password)
+            log.log("INFO", f"Password reset successful for user {username}")
+        except Exception as err:
+            log.log("ERROR", f"Failed to reset password for user {username}: {err}")
+            raise ValueError("Помилка при зміні паролю") from err

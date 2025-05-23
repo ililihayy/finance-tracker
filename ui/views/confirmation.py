@@ -7,16 +7,14 @@ from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
 from colors import RC
-from database.exceptions import UserAlreadyExistError
-from auth.exceptions import ConfirmCodeError
 
 REGISTER_DATA: dict[str, str] = {}
 
 
 def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Підтвердження електронної пошти"
-    page.window.width = 900
-    page.window.height = 900
+    page.window.width = 800
+    page.window.height = 600
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
     email = REGISTER_DATA["email"]
@@ -60,24 +58,24 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             show_notification("Будь ласка, введіть код підтвердження")
             return
 
-        try:
-            Auth.register_user(
-                REGISTER_DATA["username"],
-                REGISTER_DATA["email"],
-                REGISTER_DATA["hash_password"],
-                code,
-            )
-            show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
-            page.update()
-            page.go("/")
-            page.views.clear()
-        except UserAlreadyExistError:
-            show_notification("Користувач з таким ім'ям або email вже існує")
-        except ConfirmCodeError as err:
-            if "Invalid confirmation code" in str(err):
-                show_notification("Невірний код підтвердження")
-            else:
-                show_notification(str(err))
+        # try:
+        Auth.register_user(
+            REGISTER_DATA["username"],
+            REGISTER_DATA["email"],
+            REGISTER_DATA["hash_password"],
+            code,
+        )
+        show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
+        page.update()
+        page.go("/")
+        page.views.clear()
+        # except UserAlreadyExistError:
+        #     show_notification("Користувач з таким ім'ям або email вже існує")
+        # except ConfirmCodeError as err:
+        #     if "Invalid confirmation code" in str(err):
+        #         show_notification("Невірний код підтвердження")
+        #     else:
+        #         show_notification(str(err))
 
     def resend_code(e: Any) -> None:
         try:

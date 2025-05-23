@@ -71,7 +71,7 @@ def validate_password(password: str) -> tuple[bool, str]:
 def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Реєстрація"
     page.window.width = 800
-    page.window.height = 600
+    page.window.height = 700
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
     # Error text for validation messages

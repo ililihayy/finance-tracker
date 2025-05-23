@@ -49,6 +49,11 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     def login_click(e: Any) -> None:
         nonlocal attempts
         username_val = username.value
+        Auth.blocked_user = username_val
+        user_status = Utils.get_user_status(username_val)
+        if user_status == 1:
+            page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
+            return
         if attempts >= 3:
             page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
             Utils.block_user(username_val)

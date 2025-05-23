@@ -5,64 +5,126 @@ from typing import Any
 import flet as ft  # type: ignore[import-not-found]
 from flet_route import Basket, Params  # type: ignore[import-not-found]
 
+from auth import Auth
 from colors import LC
+from database.utils import Utils
 
 
 def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
-    page.title = "Password Recovery"
+    page.title = "Відновлення паролю"
     page.window.width = 800
     page.window.height = 600
     page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
 
-    def send_code(e: Any) -> None:
-        page.snack_bar = ft.SnackBar(ft.Text("The confirmation code has been sent to your mail"))
+    def show_notification(message: str, is_error: bool = False) -> None:
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text(message, color=LC.LIGHT_YELLOW),
+            bgcolor=LC.GREEN,
+            duration=3000,
+        )
         page.snack_bar.open = True
         page.update()
+
+    def validate_password(password: str) -> tuple[bool, str]:
+        if len(password) < 8:
+            return False, "Пароль повинен містити мінімум 8 символів"
+        if not any(c.isupper() for c in password):
+            return False, "Пароль повинен містити хоча б одну велику літеру"
+        if not any(c.islower() for c in password):
+            return False, "Пароль повинен містити хоча б одну малу літеру"
+        if not any(c.isdigit() for c in password):
+            return False, "Пароль повинен містити хоча б одну цифру"
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+            return False, "Пароль повинен містити хоча б один спеціальний символ"
+        return True, ""
+
+    def send_code(e: Any) -> None:
+        email = Utils.get_user_email(Auth.blocked_user)
+        try:
+            Auth.send_confirmation_email(email)
+            show_notification("Код підтвердження надіслано на вашу пошту")
+            code_field.disabled = False
+            new_password.disabled = False
+            confirm_password.disabled = False
+            reset_button.disabled = False
+            page.update()
+        except ValueError as err:
+            show_notification(str(err), True)
+            # Reset fields if email is not found
+            code_field.disabled = True
+            new_password.disabled = True
+            confirm_password.disabled = True
+            reset_button.disabled = True
+            page.update()
+        except Exception as err:
+            show_notification(f"Помилка при відправці коду: {err!s}", True)
+            # Reset fields on any error
+            code_field.disabled = True
+            new_password.disabled = True
+            confirm_password.disabled = True
+            reset_button.disabled = True
+            page.update()
 
     def reset_password(e: Any) -> None:
-        if new_password.value != confirm_password.value:
-            page.snack_bar = ft.SnackBar(ft.Text("Passwords do not match!"))
-            page.snack_bar.open = True
-            page.update()
+        email = Utils.get_user_email(Auth.blocked_user)
+        code = code_field.value
+        new_pass = new_password.value
+        confirm_pass = confirm_password.value
+
+        if not all([email, code, new_pass, confirm_pass]):
+            show_notification("Будь ласка, заповніть всі поля", True)
             return
 
-        page.snack_bar = ft.SnackBar(ft.Text("The password has been successfully changed!"))
-        page.snack_bar.open = True
+        if new_pass != confirm_pass:
+            show_notification("Паролі не співпадають!", True)
+            return
+
+        is_valid, error_msg = validate_password(new_pass)
+        if not is_valid:
+            show_notification(error_msg, True)
+            return
+
+        # Auth.reset_password(email, code, new_pass)
+        Utils.unblock_user(Auth.blocked_user)
+        show_notification("Пароль успішно змінено!")
+        # Clear all fields
+        code_field.value = ""
+        new_password.value = ""
+        confirm_password.value = ""
+        # Disable fields
+        code_field.disabled = True
+        new_password.disabled = True
+        confirm_password.disabled = True
+        reset_button.disabled = True
         page.update()
+        # Navigate to login page
         page.go("/")
 
     def back_to_login(e: Any) -> None:
         page.go("/")
 
     title = ft.Text(
-        "Recover your password",
+        "Відновлення паролю",
         color=LC.LIGHT_YELLOW,
         size=24,
         weight=ft.FontWeight.BOLD,
         text_align=ft.TextAlign.CENTER,
     )
 
-    email_field = ft.TextField(
-        label="E-mail",
+    code_field = ft.TextField(
+        label="Код підтвердження",
         label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         text_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         focused_border_color=LC.LIGHT_YELLOW,
-        keyboard_type=ft.KeyboardType.EMAIL,
-        width=400,
+        width=250,
+        disabled=True,
     )
 
     code_row = ft.Row(
         controls=[
-            ft.TextField(
-                label="Confirmation code",
-                label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
-                text_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
-                focused_border_color=LC.LIGHT_YELLOW,
-                width=250,
-                expand=True,
-            ),
+            code_field,
             ft.ElevatedButton(
-                "Send the code",
+                "Надіслати код",
                 on_click=send_code,
                 bgcolor=LC.SUPER_DARK_GREEN,
                 color=LC.LIGHT_YELLOW,
@@ -76,41 +138,43 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
     )
 
     new_password = ft.TextField(
-        label="New password",
+        label="Новий пароль",
         password=True,
         can_reveal_password=True,
         label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         text_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         focused_border_color=LC.LIGHT_YELLOW,
         width=400,
+        disabled=True,
     )
 
     confirm_password = ft.TextField(
-        label="Confirm the password",
+        label="Підтвердження паролю",
         password=True,
         can_reveal_password=True,
         label_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         text_style=ft.TextStyle(color=LC.LIGHT_YELLOW),
         focused_border_color=LC.LIGHT_YELLOW,
         width=400,
+        disabled=True,
     )
 
     reset_button = ft.ElevatedButton(
-        "Change the password",
+        "Змінити пароль",
         on_click=reset_password,
         bgcolor=LC.SUPER_DARK_GREEN,
         color=LC.LIGHT_YELLOW,
         width=200,
         height=40,
+        disabled=True,
     )
 
     back_button = ft.TextButton(
-        "Go back to the entrance", on_click=back_to_login, style=ft.ButtonStyle(color=LC.LIGHT_YELLOW)
+        "Повернутися до входу", on_click=back_to_login, style=ft.ButtonStyle(color=LC.LIGHT_YELLOW)
     )
 
     form_column = ft.Column(
         [
-            email_field,
             code_row,
             new_password,
             confirm_password,
