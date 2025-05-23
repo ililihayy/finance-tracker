@@ -69,7 +69,7 @@ def create_user_categories_table(username: str) -> None:
 
 def insert_user_default_categories(username: str) -> None:
     categories_table = f"categories_{username}"
-    categories = ["Food", "Health", "Transport", "Home", "Entertainment", "Clothes", "Secret expenses"]
+    categories = ["Харчування", "Здоров'я", "Транспорт", "Дім", "Розваги", "Одяг", "Секретні витрати"]
     with sqlite3.connect(path, check_same_thread=False) as conn:
         cursor = conn.cursor()
         for category in categories:

@@ -322,6 +322,101 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         monthly_stats.update_view()  # Update monthly stats when expense is deleted
         expense_list.update()
 
+    def show_edit_dialog(expense: dict):
+        edit_category_dropdown = ft.Dropdown(
+            label="Категорія",
+            width=200,
+            options=[ft.dropdown.Option(c) for c in categories],
+            value=expense["category"],
+            border_color=ExpColors.LIGHT_YELLOW,
+            focused_border_color=ExpColors.LIGHT_GREEN,
+            color=ExpColors.LIGHT_YELLOW,
+            label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+        )
+
+        edit_amount_input = ft.TextField(
+            label="Сума витрати",
+            keyboard_type=ft.KeyboardType.NUMBER,
+            prefix_text="₴",
+            width=200,
+            value=str(expense["amount"]),
+            border_color=ExpColors.LIGHT_YELLOW,
+            focused_border_color=ExpColors.LIGHT_GREEN,
+            color=ExpColors.LIGHT_YELLOW,
+            cursor_color=ExpColors.LIGHT_YELLOW,
+            label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
+        )
+
+        edit_date = datetime.strptime(expense["date"].strftime("%d/%m/%Y"), "%d/%m/%Y")
+        edit_date_display = ft.Text(f"Дата: {edit_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
+
+        def handle_edit_date_change(e):
+            nonlocal edit_date
+            if e.control.value:
+                edit_date = e.control.value
+                edit_date_display.value = f"Дата: {edit_date.strftime('%d/%m/%Y')}"
+                page.update()
+
+        edit_date_button = ft.ElevatedButton(
+            "Обрати дату",
+            icon=ft.icons.CALENDAR_MONTH,
+            on_click=lambda e: page.open(
+                ft.DatePicker(
+                    first_date=datetime(year=2020, month=10, day=1),
+                    last_date=datetime.today(),
+                    on_change=handle_edit_date_change,
+                    on_dismiss=lambda _: None,
+                )
+            ),
+            style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+        )
+
+        def save_edit(e):
+            if edit_category_dropdown.value and edit_amount_input.value:
+                try:
+                    amount = float(edit_amount_input.value)
+                    Expense.update_expense(
+                        expense["expense_id"], edit_category_dropdown.value, amount, edit_date.strftime("%d/%m/%Y")
+                    )
+                    expense_list.controls = build_expense_rows()
+                    monthly_stats.update_view()
+                    page.dialog = None  # Close dialog
+                    page.update()
+                except ValueError:
+                    page.snack_bar = ft.SnackBar(
+                        content=ft.Text("Будь ласка, введіть коректну суму"), bgcolor=ExpColors.SUPER_DARK_GREEN
+                    )
+                    page.snack_bar.open = True
+                    page.update()
+
+        edit_dialog = ft.AlertDialog(
+            title=ft.Text("Редагувати витрату", color=ExpColors.LIGHT_YELLOW),
+            content=ft.Column(
+                [
+                    edit_category_dropdown,
+                    edit_amount_input,
+                    ft.Row([edit_date_display, edit_date_button]),
+                ],
+                spacing=20,
+            ),
+            actions=[
+                ft.TextButton(
+                    "Скасувати",
+                    on_click=lambda _: setattr(page, "dialog", None),
+                    style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW),
+                ),
+                ft.FilledButton(
+                    "Зберегти",
+                    on_click=save_edit,
+                    style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+                ),
+            ],
+            bgcolor=ExpColors.DARK_GREEN,
+        )
+
+        page.dialog = edit_dialog
+        page.update()
+
     def build_expense_rows():
         db_expenses = Expense.get_all_user_expenses()
         db_expenses.sort(key=lambda x: x["date"], reverse=True)
@@ -344,7 +439,12 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                         ],
                         expand=True,
                     ),
-                    ft.IconButton(icon=ft.icons.EDIT, tooltip="Редагувати", icon_color=ExpColors.LIGHT_YELLOW),
+                    ft.IconButton(
+                        icon=ft.icons.EDIT,
+                        tooltip="Редагувати",
+                        on_click=lambda e, exp=expense: show_edit_dialog(exp),
+                        icon_color=ExpColors.LIGHT_YELLOW,
+                    ),
                     ft.IconButton(
                         icon=ft.icons.DELETE,
                         tooltip="Видалити",
@@ -449,12 +549,6 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         center_title=True,
         bgcolor=ExpColors.SUPER_DARK_GREEN,
         actions=[
-            ft.IconButton(
-                icon=ft.icons.SUMMARIZE,
-                tooltip="Підсумки витрат",
-                on_click=lambda _: page.show_dialog(summary_dialog),
-                icon_color=ExpColors.LIGHT_YELLOW,
-            ),
             ft.IconButton(
                 icon=ft.icons.PERSON,
                 tooltip="Профіль",

@@ -59,11 +59,11 @@ class Auth:
     def register_user(username: str, email: str, password: str, user_code: str) -> None:
         if user_code == Auth.confirmation_code:
             from database.utils import Utils as Db_utils
-            from security.user_key import ensure_encryption_key, generate_salt_bytes
+            from security.user_key import ensure_user_encryption_key, generate_salt_bytes
 
             salt = generate_salt_bytes()
             Db_utils.add_user(username, email, password, salt)
-            ensure_encryption_key(username)
+            ensure_user_encryption_key(username)
         else:
             raise ConfirmCodeError("The verification code is incorrect")
 

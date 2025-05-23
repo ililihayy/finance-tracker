@@ -36,7 +36,7 @@ def _generate_decryption_key(username: str):
     return base64.urlsafe_b64encode(key)
 
 
-def ensure_encryption_key(username: str, env_file: str = ".env") -> None:
+def ensure_user_encryption_key(username: str, env_file: str = ".env") -> None:
     key_name = f"ENCRYPTION_KEY_{username}"
     encryption_key = os.getenv(key_name)
 
@@ -54,8 +54,9 @@ def get_user_encryption_key(username: str, env_file: str = ".env") -> bytes:
     encrypted_key = os.getenv(key_name)
 
     if not encrypted_key:
-        print(key_name)
-        raise ValueError("Encryption key not found in environment.")
+        ensure_user_encryption_key(username)
+        encrypted_key = os.getenv(key_name)
+        log.log("ERROR", "Encryption user key not found in environment.")
 
     decryption_key = _generate_decryption_key(username)
     decryptor = Fernet(decryption_key)

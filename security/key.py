@@ -23,9 +23,11 @@ def ensure_encryption_key(env_file: str = ".env", key_name: str = "ENCRYPTION_KE
 
 def get_encryption_key() -> str:
     load_dotenv()
-    ensure_encryption_key()
     encryption_key = os.getenv("ENCRYPTION_KEY")
     if not encryption_key:
         log.log("ERROR", "Failed to get the key to the database.")
-        raise ValueError("ENCRYPTION_KEY is not set in the .env")
+        ensure_encryption_key()
+        load_dotenv()
+        encryption_key = os.getenv("ENCRYPTION_KEY")
+        # raise ValueError("ENCRYPTION_KEY is not set in the .env")
     return encryption_key

@@ -7,6 +7,7 @@ from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
 from colors import RC
+from database.exceptions import UserAlreadyExistError
 
 REGISTER_DATA: dict[str, str] = {}
 
@@ -43,20 +44,46 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         focused_border_color=RC.LIGHT_YELLOW,
     )
 
+    def show_notification(message: str, color: str = RC.LIGHT_YELLOW) -> None:
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text(message, color=color),
+            bgcolor=RC.GREEN,
+            duration=3000,
+        )
+        page.snack_bar.open = True
+        page.update()
+
     def submit_click(e: Any) -> None:
         code = code_field.value
-        Auth.register_user(
-            REGISTER_DATA["username"],
-            REGISTER_DATA["email"],
-            REGISTER_DATA["hash_password"],
-            code,
-        )
-        page.update()
-        page.go("/")
-        page.views.clear()
+        if not code:
+            show_notification("Будь ласка, введіть код підтвердження", RC.RED)
+            return
+
+        try:
+            Auth.register_user(
+                REGISTER_DATA["username"],
+                REGISTER_DATA["email"],
+                REGISTER_DATA["hash_password"],
+                code,
+            )
+            show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
+            page.update()
+            page.go("/")
+            page.views.clear()
+        except UserAlreadyExistError:
+            show_notification("Користувач з таким ім'ям або email вже існує", RC.RED)
+        except ValueError as err:
+            if "Invalid confirmation code" in str(err):
+                show_notification("Невірний код підтвердження", RC.RED)
+            else:
+                show_notification(str(err), RC.RED)
 
     def resend_code(e: Any) -> None:
-        pass
+        try:
+            Auth.send_confirmation_email(REGISTER_DATA["email"])
+            show_notification("Новий код підтвердження надіслано на вашу електронну пошту")
+        except Exception as err:
+            show_notification(f"Помилка при відправці коду: {err!s}", RC.RED)
 
     def register(e: Any) -> None:
         page.go("/register")
