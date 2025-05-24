@@ -557,68 +557,10 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         bgcolor=ExpColors.DARK_GREEN,
     )
 
-    summary_dialog = ft.AlertDialog(
-        title=ft.Text("Підсумки витрат", color=ExpColors.LIGHT_YELLOW),
-        content=ft.Column([
-            ft.Text("Загальна сума витрат: 450.00 ₴", size=18, weight="bold", color=ExpColors.LIGHT_YELLOW),
-            ft.Divider(color=ExpColors.LIGHT_GREEN),
-            ft.Text("Витрати по категоріях:", size=16, color=ExpColors.LIGHT_YELLOW),
-            ft.Text("Їжа: 250.00 ₴ (55.6%)", color=ExpColors.LIGHT_GREEN),
-            ft.Text("Транспорт: 120.00 ₴ (26.7%)", color=ExpColors.LIGHT_GREEN),
-            ft.Text("Розваги: 80.00 ₴ (17.8%)", color=ExpColors.LIGHT_GREEN),
-            ft.Divider(color=ExpColors.LIGHT_GREEN),
-            ft.Text("Витрати за останній тиждень: 300.00 ₴", size=16, color=ExpColors.LIGHT_YELLOW),
-        ]),
-        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
-        bgcolor=ExpColors.DARK_GREEN,
-    )
-
-    profile_dialog = ft.AlertDialog(
-        title=ft.Text("Профіль користувача", color=ExpColors.LIGHT_YELLOW),
-        content=ft.Column(
-            [
-                ft.TextField(
-                    label="Ваше ім'я",
-                    value="Користувач",
-                    border_color=ExpColors.LIGHT_YELLOW,
-                    focused_border_color=ExpColors.LIGHT_GREEN,
-                    color=ExpColors.LIGHT_YELLOW,
-                    cursor_color=ExpColors.LIGHT_YELLOW,
-                    label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
-                ),
-                ft.TextField(
-                    label="Місячний бюджет",
-                    keyboard_type=ft.KeyboardType.NUMBER,
-                    prefix_text="₴",
-                    value="10000",
-                    border_color=ExpColors.LIGHT_YELLOW,
-                    focused_border_color=ExpColors.LIGHT_GREEN,
-                    color=ExpColors.LIGHT_YELLOW,
-                    cursor_color=ExpColors.LIGHT_YELLOW,
-                    label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
-                ),
-                ft.FilledButton(
-                    "Зберегти налаштування", style=ft.ButtonStyle(bgcolor=ExpColors.GREEN, color=ExpColors.LIGHT_YELLOW)
-                ),
-            ],
-            spacing=10,
-        ),
-        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
-        bgcolor=ExpColors.DARK_GREEN,
-    )
-
     app_bar = ft.AppBar(
         title=ft.Text("Фінансовий трекер", color=ExpColors.LIGHT_YELLOW),
         center_title=True,
         bgcolor=ExpColors.SUPER_DARK_GREEN,
-        actions=[
-            ft.IconButton(
-                icon=ft.Icons.PERSON,
-                tooltip="Профіль",
-                on_click=lambda _: page.show_dialog(profile_dialog),
-                icon_color=ExpColors.LIGHT_YELLOW,
-            ),
-        ],
     )
 
     monthly_stats = MonthlyStatsView(page)
