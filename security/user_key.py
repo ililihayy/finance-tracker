@@ -11,8 +11,7 @@ from dotenv import load_dotenv, set_key
 
 from log.logger import log
 
-# load_dotenv()
-ITERATIONS = 10
+ITERATIONS = 1
 
 
 def generate_salt_bytes(length: int = 16) -> bytes:
