@@ -228,7 +228,8 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             on_surface=ExpColors.LIGHT_YELLOW,
         )
     )
-
+    page.window.height = 750
+    page.window.width = 900
     categories = Expense.list_of_categories()
     selected_date = datetime.now()
 
