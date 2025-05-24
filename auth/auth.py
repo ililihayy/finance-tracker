@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from .exceptions import ConfirmCodeError, InvalidCredentialsError
 from log.logger import log
 
-load_dotenv()
+
 
 
 class Auth:
@@ -40,6 +40,7 @@ class Auth:
 
     @staticmethod
     def send_confirmation_email(email: str) -> None:
+        load_dotenv()
         Auth.confirmation_code = Auth.generate_confirmation_code()
         sender_email = "liliworkgames@gmail.com"
         password = os.getenv("GMAIL_KEY") or ""

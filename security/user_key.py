@@ -11,7 +11,7 @@ from dotenv import load_dotenv, set_key
 
 from log.logger import log
 
-load_dotenv()
+# load_dotenv()
 ITERATIONS = 10
 
 
@@ -37,25 +37,27 @@ def _generate_decryption_key(username: str):
 
 
 def ensure_user_encryption_key(username: str, env_file: str = ".env") -> None:
+    load_dotenv()
     key_name = f"ENCRYPTION_KEY_{username}"
     encryption_key = os.getenv(key_name)
 
-    if not encryption_key:
+    if encryption_key is None:
         gen_key = _generate_decryption_key(username)
         encryptor = Fernet(gen_key)
         user_encryption_key = Fernet.generate_key()  # bytes
         encrypted_user_key = encryptor.encrypt(user_encryption_key)
         set_key(env_file, key_name, encrypted_user_key.decode())
         log.log("INFO", "The encryption user`s key has been created")
+        return encrypted_user_key.decode()
 
 
 def get_user_encryption_key(username: str, env_file: str = ".env") -> bytes:
+    load_dotenv()
     key_name = f"ENCRYPTION_KEY_{username}"
     encrypted_key = os.getenv(key_name)
 
     if not encrypted_key:
-        ensure_user_encryption_key(username)
-        encrypted_key = os.getenv(key_name)
+        encrypted_key = ensure_user_encryption_key(username)
         log.log("ERROR", "Encryption user key not found in environment.")
 
     decryption_key = _generate_decryption_key(username)

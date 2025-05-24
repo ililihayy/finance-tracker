@@ -5,17 +5,18 @@ from cryptography.fernet import Fernet
 from auth.auth import Auth
 from .key import get_encryption_key
 from .user_key import get_user_encryption_key
-
-ENCRYPTION_KEY = get_encryption_key().encode()
-
-cipher = Fernet(ENCRYPTION_KEY)
+from pathlib import Path
 
 
 def encrypt_data(data: str) -> str:
+    ENCRYPTION_KEY = get_encryption_key().encode()
+    cipher = Fernet(ENCRYPTION_KEY)
     return cipher.encrypt(data.encode()).decode()
 
 
 def decrypt_data(encrypted_data: str) -> str:
+    ENCRYPTION_KEY = get_encryption_key().encode()
+    cipher = Fernet(ENCRYPTION_KEY)
     return cipher.decrypt(encrypted_data.encode()).decode()
 
 

@@ -235,7 +235,6 @@ class Utils:
                 """UPDATE users SET is_blocked = ? WHERE username = ?""",
                 (1, username),
             )
-            print(f"Blocked: {cursor.rowcount} rows updated")
             conn.commit()
 
     @staticmethod
@@ -246,7 +245,6 @@ class Utils:
                 """UPDATE users SET is_blocked = ? WHERE username = ?""",
                 (False, username),
             )
-            print(f"Unblocked: {cursor.rowcount} rows updated")
             conn.commit()
 
     @staticmethod
@@ -271,7 +269,6 @@ class Utils:
     @staticmethod
     def get_username_by_email(email: str) -> str | None:
         encrypted_email = encrypt_data(email)
-        print("email  ", encrypted_email)
         with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT username FROM users WHERE email = ?", (encrypted_email,))

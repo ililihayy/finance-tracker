@@ -14,7 +14,8 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Логін"
     page.window.width = 800
     page.window.height = 600
-    page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
+    page.theme = ft.Theme(text_theme=ft.TextTheme(
+        body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
 
     title = ft.Text(
         "Вітаємо в Трекері Фінансів!",
@@ -52,10 +53,12 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         Auth.blocked_user = username_val
         user_status = Utils.get_user_status(username_val)
         if user_status == 1:
-            page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
+            page.open(ft.SnackBar(
+                ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
             return
         if attempts >= 3:
-            page.open(ft.SnackBar(ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
+            page.open(ft.SnackBar(
+                ft.Text("Акаунт заблокований. Спробуйте відновити пароль.")))
             Utils.block_user(username_val)
             page.update()
             return
@@ -69,10 +72,12 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             attempts += 1
             if attempts < 3:
                 page.open(
-                    ft.SnackBar(ft.Text(f"Пароль або ім'я користувача неправильні. Залишилось спроб: {3 - attempts}"))
+                    ft.SnackBar(ft.Text(
+                        f"Пароль або ім'я користувача неправильні. Залишилось спроб: {3 - attempts}"))
                 )
             else:
-                page.open(ft.SnackBar(ft.Text("Обліковий запис заблоковано. Спробуйте скинути пароль.")))
+                page.open(ft.SnackBar(
+                    ft.Text("Обліковий запис заблоковано. Спробуйте скинути пароль.")))
             page.update()
 
     def forgot_password(e: Any) -> None:
@@ -89,14 +94,14 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     forgot_button = ft.ElevatedButton(
         "Забув пароль",
         on_click=forgot_password,
-        bgcolor=ft.colors.TRANSPARENT,
+        bgcolor=ft.Colors.TRANSPARENT,
         color=LC.LIGHT_YELLOW,
     )
 
     register_button = ft.ElevatedButton(
         "Реєстрація",
         on_click=register,
-        bgcolor=ft.colors.TRANSPARENT,
+        bgcolor=ft.Colors.TRANSPARENT,
         color=LC.LIGHT_YELLOW,
     )
 
@@ -113,7 +118,8 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 username,
                 password,
                 ft.Row([login_button], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Row([forgot_button, register_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row([forgot_button, register_button],
+                       alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 attempt_text,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -137,9 +143,10 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         ),
         expand=True,
         alignment=ft.alignment.center,
-        bgcolor=ft.colors.BLACK,
+        bgcolor=ft.Colors.BLACK,
         gradient=ft.LinearGradient(
-            colors=[LC.SUPER_DARK_GREEN, LC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
+            colors=[LC.SUPER_DARK_GREEN,
+                    LC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
         ),
     )
 

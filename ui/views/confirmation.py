@@ -17,10 +17,10 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Підтвердження електронної пошти"
     page.window.width = 800
     page.window.height = 600
-    page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
+    page.theme = ft.Theme(text_theme=ft.TextTheme(
+        body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
     email = REGISTER_DATA["email"]
-    print(email)
     Auth.send_confirmation_email(email)
 
     confirmation_txt = ft.Text(
@@ -60,29 +60,31 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             show_notification("Будь ласка, введіть код підтвердження")
             return
 
-        try:
-            Auth.register_user(
-                REGISTER_DATA["username"],
-                REGISTER_DATA["email"],
-                REGISTER_DATA["hash_password"],
-                code,
-            )
-            show_notification("Реєстрація успішна! Тепер ви можете увійти в систему.")
-            page.update()
-            page.go("/")
-            page.views.clear()
-        except UserAlreadyExistError:
-            show_notification("Користувач з таким ім'ям або email вже існує")
-        except ConfirmCodeError as err:
-            if "Invalid confirmation code" in str(err):
-                show_notification("Невірний код підтвердження")
-            else:
-                show_notification(str(err))
+        # try:
+        Auth.register_user(
+            REGISTER_DATA["username"],
+            REGISTER_DATA["email"],
+            REGISTER_DATA["hash_password"],
+            code,
+        )
+        show_notification(
+            "Реєстрація успішна! Тепер ви можете увійти в систему.")
+        page.update()
+        page.go("/")
+        page.views.clear()
+    # except UserAlreadyExistError:
+    #         show_notification("Користувач з таким ім'ям або email вже існує")
+    #     except ConfirmCodeError as err:
+    #         if "Invalid confirmation code" in str(err):
+    #             show_notification("Невірний код підтвердження")
+    #         else:
+    #             show_notification(str(err))
 
     def resend_code(e: Any) -> None:
         try:
             Auth.send_confirmation_email(REGISTER_DATA["email"])
-            show_notification("Новий код підтвердження надіслано на вашу електронну пошту")
+            show_notification(
+                "Новий код підтвердження надіслано на вашу електронну пошту")
         except Exception as err:
             show_notification(f"Помилка при відправці коду: {err!s}")
 
@@ -101,13 +103,13 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     resend_code_button = ft.TextButton(
         "Надіслати код знову",
         on_click=resend_code,
-        style=ft.ButtonStyle(color=ft.colors.WHITE),
+        style=ft.ButtonStyle(color=ft.Colors.WHITE),
     )
 
     register_button = ft.TextButton(
         "Реєстрація",
         on_click=register,
-        style=ft.ButtonStyle(color=ft.colors.WHITE),
+        style=ft.ButtonStyle(color=ft.Colors.WHITE),
     )
 
     container = ft.Container(
@@ -132,7 +134,8 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     main_container = ft.Container(
         content=ft.Column(
             [
-                ft.Container(content=confirmation_txt, alignment=ft.alignment.center),
+                ft.Container(content=confirmation_txt,
+                             alignment=ft.alignment.center),
                 ft.Container(height=10),
                 ft.Container(content=info_text, alignment=ft.alignment.center),
                 ft.Container(height=20),
@@ -143,9 +146,10 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         ),
         expand=True,
         alignment=ft.alignment.center,
-        bgcolor=ft.colors.BLACK,
+        bgcolor=ft.Colors.BLACK,
         gradient=ft.LinearGradient(
-            colors=[RC.SUPER_DARK_GREEN, RC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
+            colors=[RC.SUPER_DARK_GREEN,
+                    RC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
         ),
     )
 

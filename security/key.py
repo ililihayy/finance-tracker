@@ -7,12 +7,11 @@ from dotenv import load_dotenv, set_key
 
 from log.logger import log
 
-load_dotenv()
-
 
 def ensure_encryption_key(env_file: str = ".env", key_name: str = "ENCRYPTION_KEY") -> None:
+    load_dotenv()
     encryption_key = os.getenv(key_name)
-    if not encryption_key:
+    if encryption_key is None:
         encryption_key = Fernet.generate_key().decode()
         set_key(env_file, key_name, encryption_key)
         log.log("INFO", "The encryption key has been created")

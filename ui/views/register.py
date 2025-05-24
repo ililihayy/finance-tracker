@@ -65,7 +65,8 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     page.title = "Реєстрація"
     page.window.width = 800
     page.window.height = 700
-    page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
+    page.theme = ft.Theme(text_theme=ft.TextTheme(
+        body_medium=ft.TextStyle(color=RC.LIGHT_YELLOW)))
 
     username_error = ft.Text("", color="red", size=12)
     email_error = ft.Text("", color="red", size=12)
@@ -173,7 +174,7 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     login_button = ft.ElevatedButton(
         "Вхід",
         on_click=login_click,
-        bgcolor=ft.colors.TRANSPARENT,
+        bgcolor=ft.Colors.TRANSPARENT,
         color=RC.LIGHT_YELLOW,
     )
 
@@ -189,7 +190,8 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 repeat_password,
                 repeat_password_error,
                 ft.Row([reg_button], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Row([login_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row([login_button],
+                       alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
@@ -212,9 +214,10 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         ),
         expand=True,
         alignment=ft.alignment.center,
-        bgcolor=ft.colors.BLACK,
+        bgcolor=ft.Colors.BLACK,
         gradient=ft.LinearGradient(
-            colors=[RC.SUPER_DARK_GREEN, RC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
+            colors=[RC.SUPER_DARK_GREEN,
+                    RC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
         ),
     )
 

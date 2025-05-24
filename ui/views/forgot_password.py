@@ -14,7 +14,8 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
     page.title = "Відновлення паролю"
     page.window.width = 800
     page.window.height = 600
-    page.theme = ft.Theme(text_theme=ft.TextTheme(body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
+    page.theme = ft.Theme(text_theme=ft.TextTheme(
+        body_medium=ft.TextStyle(color=LC.LIGHT_YELLOW)))
 
     def show_notification(message: str, is_error: bool = False) -> None:
         page.snack_bar = ft.SnackBar(
@@ -183,15 +184,17 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
 
     main_container = ft.Container(
         content=ft.Column(
-            [ft.Container(content=title, padding=ft.padding.only(bottom=30)), form_column],
+            [ft.Container(content=title, padding=ft.padding.only(
+                bottom=30)), form_column],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         ),
         expand=True,
         alignment=ft.alignment.center,
-        bgcolor=ft.colors.BLACK,
+        bgcolor=ft.Colors.BLACK,
         gradient=ft.LinearGradient(
-            colors=[LC.SUPER_DARK_GREEN, LC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
+            colors=[LC.SUPER_DARK_GREEN,
+                    LC.DARK_GREEN], begin=ft.alignment.top_left, end=ft.alignment.bottom_right
         ),
         padding=ft.padding.all(20),
     )
