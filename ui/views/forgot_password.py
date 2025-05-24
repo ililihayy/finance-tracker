@@ -6,6 +6,7 @@ import flet as ft  # type: ignore[import-not-found]
 from flet_route import Basket, Params  # type: ignore[import-not-found]
 
 from auth import Auth
+from auth.exceptions import ConfirmCodeError
 from colors import LC
 from database.utils import Utils
 
@@ -70,6 +71,14 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
         new_pass = new_password.value
         confirm_pass = confirm_password.value
 
+        if not code:
+            error_dialog = ft.AlertDialog(
+                title=ft.Text("Помилка"),
+                content=ft.Text("Введіть код")
+            )
+            page.open(error_dialog)  
+            return
+
         if not all([email, code, new_pass, confirm_pass]):
             show_notification("Будь ласка, заповніть всі поля", True)
             return
@@ -82,18 +91,26 @@ def forgot_password_page(page: ft.Page, params: Params, basket: Basket) -> ft.Vi
         if not is_valid:
             show_notification(error_msg, True)
             return
-
-        Utils.unblock_user(Auth.blocked_user)
-        show_notification("Пароль успішно змінено!")
-        code_field.value = ""
-        new_password.value = ""
-        confirm_password.value = ""
-        code_field.disabled = True
-        new_password.disabled = True
-        confirm_password.disabled = True
-        reset_button.disabled = True
-        page.update()
-        page.go("/")
+        try:
+            Auth.reset_password(email, code, new_pass)
+            Utils.unblock_user(Auth.blocked_user)
+            show_notification("Пароль успішно змінено!")
+            code_field.value = ""
+            new_password.value = ""
+            confirm_password.value = ""
+            code_field.disabled = True
+            new_password.disabled = True
+            confirm_password.disabled = True
+            reset_button.disabled = True
+            page.update()
+            page.go("/")
+        except ConfirmCodeError as err:
+            error_dialog = ft.AlertDialog(
+                title=ft.Text("Помилка"),
+                content=ft.Text("Неправильний код підтвердження")
+            )
+            page.open(error_dialog)  
+            return
 
     def back_to_login(e: Any) -> None:
         page.go("/")

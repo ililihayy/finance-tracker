@@ -57,28 +57,32 @@ def confirmation_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     def submit_click(e: Any) -> None:
         code = code_field.value
         if not code:
-            show_notification("Будь ласка, введіть код підтвердження")
+            error_dialog = ft.AlertDialog(
+                title=ft.Text("Помилка"),
+                content=ft.Text("Введіть код")
+            )
+            page.open(error_dialog)  
             return
 
-        # try:
-        Auth.register_user(
-            REGISTER_DATA["username"],
-            REGISTER_DATA["email"],
-            REGISTER_DATA["hash_password"],
-            code,
-        )
-        show_notification(
-            "Реєстрація успішна! Тепер ви можете увійти в систему.")
-        page.update()
-        page.go("/")
-        page.views.clear()
-    # except UserAlreadyExistError:
-    #         show_notification("Користувач з таким ім'ям або email вже існує")
-    #     except ConfirmCodeError as err:
-    #         if "Invalid confirmation code" in str(err):
-    #             show_notification("Невірний код підтвердження")
-    #         else:
-    #             show_notification(str(err))
+        try:
+            Auth.register_user(
+                REGISTER_DATA["username"],
+                REGISTER_DATA["email"],
+                REGISTER_DATA["hash_password"],
+                code,
+            )
+            
+            page.update()
+            page.go("/")
+            page.views.clear()
+        except ConfirmCodeError as err:
+            error_dialog = ft.AlertDialog(
+                title=ft.Text("Помилка"),
+                content=ft.Text("Неправильний код підтвердження")
+            )
+            page.open(error_dialog)  
+            return
+
 
     def resend_code(e: Any) -> None:
         try:

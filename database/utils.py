@@ -274,3 +274,25 @@ class Utils:
             cursor.execute("SELECT username FROM users WHERE email = ?", (encrypted_email,))
             result = cursor.fetchone()
         return result[0] if result else None
+
+    @staticmethod
+    def get_user_by_username(username: str) -> str | None:
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT email FROM users WHERE username = ?", (username,))
+            result = cursor.fetchone()
+            return result[0] if result else None
+       
+
+    @staticmethod
+    def get_all_emails() -> list[str]:
+        """Retrieve and decrypt all email addresses from the database."""
+        with sqlite3.connect(DATABASE, check_same_thread=False) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT email FROM users")
+            encrypted_emails = cursor.fetchall()
+        
+        # Decrypt each email address
+        decrypted_emails = [decrypt_data(email[0]) for email in encrypted_emails]
+        log.log("INFO", f"Retrieved {len(decrypted_emails)} email addresses from database")
+        return decrypted_emails

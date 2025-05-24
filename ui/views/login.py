@@ -51,6 +51,7 @@ def login_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         nonlocal attempts
         username_val = username.value
         Auth.blocked_user = username_val
+        print("Auth.blocked_user", Auth.blocked_user)
         user_status = Utils.get_user_status(username_val)
         if user_status == 1:
             page.open(ft.SnackBar(

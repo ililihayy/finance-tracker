@@ -65,6 +65,21 @@ class Auth:
             raise ValueError("Помилка при відправці коду підтвердження") from e
 
     @staticmethod
+    def check_user_name_exists(username: str):
+        from database.utils import Utils as Db_utils
+        if Db_utils.get_user_by_username(username):
+            log.log("ERROR", f"Username '{username}' is already taken")
+            return True
+
+    @staticmethod
+    def check_email_exists(email: str):
+        from database.utils import Utils as Db_utils
+        if email in Db_utils.get_all_emails():
+            log.log("ERROR", f"Email '{email}' is already taken")
+            return True
+        
+
+    @staticmethod
     def register_user(username: str, email: str, password: str, user_code: str) -> None:
         if user_code == Auth.confirmation_code:
             from database.utils import Utils as Db_utils
@@ -120,7 +135,7 @@ class Auth:
             raise ConfirmCodeError("Невірний код підтвердження")
 
         try:
-            Db_utils.update_user_password(username, new_password)
+            Db_utils.update_user_password(username, Auth.hash_password(new_password))
             log.log("INFO", f"Password reset successful for user {username}")
         except Exception as err:
             log.log("ERROR", f"Failed to reset password for user {username}: {err}")

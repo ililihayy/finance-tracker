@@ -155,10 +155,31 @@ def register_page(page: ft.Page, params: Params, basket: Basket) -> ft.View:
 
     def register(e: Any) -> None:
         if not validate_inputs():
+            error_dialog = ft.AlertDialog(
+                    title=ft.Text("Помилка"),
+                    content=ft.Text("Заповніть поля")
+                )
+            page.open(error_dialog)             
             return
 
         username_val = username.value
         email_val = email.value
+
+        if Auth.check_user_name_exists(username_val):
+            error_dialog = ft.AlertDialog(
+                    title=ft.Text("Помилка"),
+                    content=ft.Text("Ім'я вже зайняте")
+                )
+            page.open(error_dialog)  
+            return
+
+        if Auth.check_email_exists(email_val):
+            error_dialog = ft.AlertDialog(
+                    title=ft.Text("Помилка"),
+                    content=ft.Text("Пошта вже зайнята")
+                )
+            page.open(error_dialog)  
+            return
 
         conf.REGISTER_DATA = {
             "username": username_val,
