@@ -59,8 +59,7 @@ class MonthlyStatsView:
             category = expense["category"]
             amount = float(expense["amount"])
             if amount > 0:  # Only include categories with expenses
-                category_totals[category] = category_totals.get(
-                    category, 0) + amount
+                category_totals[category] = category_totals.get(category, 0) + amount
 
         return category_totals
 
@@ -81,16 +80,14 @@ class MonthlyStatsView:
         sections = []
         for category, amount in expenses.items():
             if amount > 0:  # Only add sections for categories with expenses
-                percentage = (amount / total_amount *
-                              100) if total_amount > 0 else 0
+                percentage = (amount / total_amount * 100) if total_amount > 0 else 0
                 sections.append(
                     ft.PieChartSection(
                         value=percentage,
                         title=category,
                         color=self.get_next_color(),
                         radius=100,
-                        title_style=ft.TextStyle(
-                            color=ExpColors.SUPER_DARK_GREEN, size=12, weight=ft.FontWeight.BOLD),
+                        title_style=ft.TextStyle(color=ExpColors.SUPER_DARK_GREEN, size=12, weight=ft.FontWeight.BOLD),
                     )
                 )
 
@@ -99,8 +96,7 @@ class MonthlyStatsView:
 
         # Create month navigation buttons
         def change_month(delta: int):
-            new_date = datetime(
-                self.current_year, self.current_month, 1) + timedelta(days=32 * delta)
+            new_date = datetime(self.current_year, self.current_month, 1) + timedelta(days=32 * delta)
             self.current_month = new_date.month
             self.current_year = new_date.year
             self.current_date = new_date
@@ -111,8 +107,7 @@ class MonthlyStatsView:
                 ft.IconButton(
                     icon=ft.Icons.ARROW_BACK_IOS, on_click=lambda _: change_month(-1), icon_color=ExpColors.LIGHT_YELLOW
                 ),
-                ft.Text(self.current_date.strftime("%B %Y"),
-                        size=20, color=ExpColors.LIGHT_YELLOW),
+                ft.Text(self.current_date.strftime("%B %Y"), size=20, color=ExpColors.LIGHT_YELLOW),
                 ft.IconButton(
                     icon=ft.Icons.ARROW_FORWARD_IOS,
                     on_click=lambda _: change_month(1),
@@ -127,8 +122,7 @@ class MonthlyStatsView:
             ft.Container(
                 content=ft.Column(
                     [
-                        ft.Icon(name=ft.Icons.PIE_CHART_OUTLINE,
-                                size=64, color=ExpColors.LIGHT_YELLOW),
+                        ft.Icon(name=ft.Icons.PIE_CHART_OUTLINE, size=64, color=ExpColors.LIGHT_YELLOW),
                         ft.Text(
                             "Немає витрат за цей місяць",
                             size=20,
@@ -148,10 +142,8 @@ class MonthlyStatsView:
 
         category_summary = ft.Column(
             [
-                ft.Text(f"{self.current_date.strftime('%B %Y')}",
-                        size=24, weight="bold", color=ExpColors.LIGHT_YELLOW),
-                ft.Text(f"Загальна сума: {total_amount:.2f} ₴",
-                        size=18, color=ExpColors.LIGHT_YELLOW),
+                ft.Text(f"{self.current_date.strftime('%B %Y')}", size=24, weight="bold", color=ExpColors.LIGHT_YELLOW),
+                ft.Text(f"Загальна сума: {total_amount:.2f} ₴", size=18, color=ExpColors.LIGHT_YELLOW),
                 ft.Divider(color=ExpColors.LIGHT_GREEN),
             ]
             + [
@@ -172,8 +164,7 @@ class MonthlyStatsView:
                         ],
                         spacing=10,
                     ),
-                    padding=ft.padding.only(
-                        left=10, right=10, top=5, bottom=5),
+                    padding=ft.padding.only(left=10, right=10, top=5, bottom=5),
                 )
                 for category, amount in expenses.items()
                 if amount > 0  # Only show categories with expenses
@@ -189,8 +180,7 @@ class MonthlyStatsView:
                 ft.Row(
                     [
                         ft.Container(
-                            content=empty_state or ft.PieChart(
-                                sections=sections, width=400, height=400, expand=True),
+                            content=empty_state or ft.PieChart(sections=sections, width=400, height=400, expand=True),
                             expand=True,
                             alignment=ft.alignment.center,
                         ),
@@ -253,11 +243,8 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         try:
             Expense.add_category(category_name)
             categories.append(category_name)
-            categories.sort()  # Keep categories sorted
-            category_dropdown.options = [
-                ft.dropdown.Option(c) for c in categories]
+            category_dropdown.options = [ft.dropdown.Option(c) for c in categories]
             category_dropdown.value = category_name
-            edit_category_button.visible = True  # Show edit button when category is selected
             new_category_input.value = ""
             update_category_visibility(False)
             page.snack_bar = ft.SnackBar(
@@ -272,10 +259,15 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             page.snack_bar.open = True
             page.update()
 
+    def toggle_new_category(e):
+        new_category_input.visible = not new_category_input.visible
+        if new_category_input.visible:
+            new_category_input.focus()
+        page.update()
+
     def add_expense_click(e: Any):
         if category_dropdown.value and expense_input.value:
-            Expense.add_expense(category_dropdown.value, float(
-                expense_input.value), selected_date.strftime("%d/%m/%Y"))
+            Expense.add_expense(category_dropdown.value, float(expense_input.value), selected_date.strftime("%d/%m/%Y"))
             expense_input.value = ""
             expense_list.controls = build_expense_rows()
             monthly_stats.update_view()  # Update monthly stats when new expense is added
@@ -317,20 +309,6 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
     )
 
-    edit_category_button = ft.IconButton(
-        icon=ft.Icons.EDIT,
-        tooltip="Редагувати категорію",
-        icon_color=ExpColors.LIGHT_YELLOW,
-        visible=False,  # Initially hidden
-    )
-
-    def on_category_change(e):
-        # Show edit button only when a category is selected
-        edit_category_button.visible = bool(category_dropdown.value)
-        page.update()
-
-    category_dropdown.on_change = on_category_change
-
     add_category_button = ft.IconButton(
         icon=ft.Icons.ADD,
         tooltip="Додати нову категорію",
@@ -340,7 +318,6 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
     category_row = ft.Row(
         [
             category_dropdown,
-            edit_category_button,  # Add edit button next to dropdown
             add_category_button,
             ft.Container(
                 content=ft.Column(
@@ -349,8 +326,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                         ft.ElevatedButton(
                             "Додати категорію",
                             on_click=add_category_click,
-                            style=ft.ButtonStyle(
-                                bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+                            style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
                             visible=False,
                         ),
                     ],
@@ -363,14 +339,12 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         spacing=10,
     )
 
-    date_display = ft.Text(
-        f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
+    date_display = ft.Text(f"Дата: {selected_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
 
     add_expense_button = ft.FilledButton(
         "Додати витрату",
         on_click=add_expense_click,
-        style=ft.ButtonStyle(
-            bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+        style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
     )
 
     def handle_change(e):
@@ -394,8 +368,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                 on_dismiss=handle_dismissal,
             )
         ),
-        style=ft.ButtonStyle(
-            bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
+        style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
     )
 
     def delete_expense(expense_id: int):
@@ -405,10 +378,9 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         expense_list.update()
 
     def show_edit_dialog(expense: dict):
-        # Create dropdown for category selection
         edit_category_dropdown = ft.Dropdown(
             label="Категорія",
-            width=250,
+            width=200,
             options=[ft.dropdown.Option(c) for c in categories],
             value=expense["category"],
             border_color=ExpColors.LIGHT_YELLOW,
@@ -417,12 +389,11 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
         )
 
-        # Create amount input field
         edit_amount_input = ft.TextField(
             label="Сума витрати",
             keyboard_type=ft.KeyboardType.NUMBER,
             prefix_text="₴",
-            width=250,
+            width=200,
             value=str(expense["amount"]),
             border_color=ExpColors.LIGHT_YELLOW,
             focused_border_color=ExpColors.LIGHT_GREEN,
@@ -431,25 +402,16 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             label_style=ft.TextStyle(color=ExpColors.LIGHT_YELLOW),
         )
 
-        # Initialize edit date
-        edit_date = datetime.strptime(
-            expense["date"].strftime("%d/%m/%Y"), "%d/%m/%Y")
-        edit_date_display = ft.Text(
-            f"Обрана дата: {edit_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW, weight="bold"
-        )
+        edit_date = datetime.strptime(expense["date"].strftime("%d/%m/%Y"), "%d/%m/%Y")
+        edit_date_display = ft.Text(f"Дата: {edit_date.strftime('%d/%m/%Y')}", size=16, color=ExpColors.LIGHT_YELLOW)
 
         def handle_edit_date_change(e):
             nonlocal edit_date
             if e.control.value:
                 edit_date = e.control.value
-                edit_date_display.value = f"Обрана дата: {edit_date.strftime('%d/%m/%Y')}"
+                edit_date_display.value = f"Дата: {edit_date.strftime('%d/%m/%Y')}"
                 page.update()
 
-        def handle_edit_date_dismissal(e):
-            # This function handles when date picker is dismissed without selection
-            pass
-
-        # Create date picker button
         edit_date_button = ft.ElevatedButton(
             "Обрати дату",
             icon=ft.Icons.CALENDAR_MONTH,
@@ -458,133 +420,57 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                     first_date=datetime(year=2020, month=10, day=1),
                     last_date=datetime.today(),
                     on_change=handle_edit_date_change,
-                    on_dismiss=handle_edit_date_dismissal,
+                    on_dismiss=lambda _: None,
                 )
             ),
-            style=ft.ButtonStyle(
-                bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
-            width=200,
+            style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
         )
 
         def save_edit(e):
-            # Validate inputs
-            if not edit_category_dropdown.value:
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text("Будь ласка, оберіть категорію"), bgcolor=ExpColors.SUPER_DARK_GREEN
-                )
-                page.snack_bar.open = True
-                page.update()
-                return
-
-            if not edit_amount_input.value:
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text("Будь ласка, введіть суму"), bgcolor=ExpColors.SUPER_DARK_GREEN
-                )
-                page.snack_bar.open = True
-                page.update()
-                return
-
-            try:
-                amount = float(edit_amount_input.value)
-                if amount <= 0:
+            if edit_category_dropdown.value and edit_amount_input.value:
+                try:
+                    amount = float(edit_amount_input.value)
+                    Expense.update_expense(
+                        expense["expense_id"], edit_category_dropdown.value, amount, edit_date.strftime("%d/%m/%Y")
+                    )
+                    expense_list.controls = build_expense_rows()
+                    monthly_stats.update_view()
+                    page.dialog = None  # Close dialog
+                    page.update()
+                except ValueError:
                     page.snack_bar = ft.SnackBar(
-                        content=ft.Text("Сума повинна бути більше нуля"), bgcolor=ExpColors.SUPER_DARK_GREEN
+                        content=ft.Text("Будь ласка, введіть коректну суму"), bgcolor=ExpColors.SUPER_DARK_GREEN
                     )
                     page.snack_bar.open = True
                     page.update()
-                    return
 
-                # Update expense in database
-                Expense.update_expense(
-                    expense["expense_id"], edit_category_dropdown.value, amount, edit_date.strftime(
-                        "%d/%m/%Y")
-                )
-
-                # Refresh the expense list and monthly stats
-                expense_list.controls = build_expense_rows()
-                monthly_stats.update_view()
-
-                # Close dialog
-                page.dialog.open = False
-                page.update()
-
-                # Show success message
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text("Витрату успішно оновлено"), bgcolor=ExpColors.SUPER_DARK_GREEN
-                )
-                page.snack_bar.open = True
-                page.update()
-
-            except ValueError:
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text("Будь ласка, введіть коректну суму"), bgcolor=ExpColors.SUPER_DARK_GREEN
-                )
-                page.snack_bar.open = True
-                page.update()
-            except Exception as err:
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text(f"Помилка при оновленні витрати: {err!s}"), bgcolor=ExpColors.SUPER_DARK_GREEN
-                )
-                page.snack_bar.open = True
-                page.update()
-
-        def close_dialog(e):
-            page.dialog.open = False
-            page.update()
-
-        # Create the edit dialog
         edit_dialog = ft.AlertDialog(
-            modal=True,
-            title=ft.Text("Редагувати витрату",
-                          color=ExpColors.LIGHT_YELLOW, size=20, weight="bold"),
-            content=ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("Оберіть категорію:",
-                                color=ExpColors.LIGHT_YELLOW, size=14),
-                        edit_category_dropdown,
-                        ft.Divider(color=ExpColors.LIGHT_GREEN, height=10),
-                        ft.Text("Введіть суму:",
-                                color=ExpColors.LIGHT_YELLOW, size=14),
-                        edit_amount_input,
-                        ft.Divider(color=ExpColors.LIGHT_GREEN, height=10),
-                        ft.Text("Оберіть дату:",
-                                color=ExpColors.LIGHT_YELLOW, size=14),
-                        ft.Row([edit_date_display],
-                               alignment=ft.MainAxisAlignment.CENTER),
-                        ft.Row([edit_date_button],
-                               alignment=ft.MainAxisAlignment.CENTER),
-                    ],
-                    spacing=10,
-                    tight=True,
-                ),
-                width=300,
-                padding=10,
+            title=ft.Text("Редагувати витрату", color=ExpColors.LIGHT_YELLOW),
+            content=ft.Column(
+                [
+                    edit_category_dropdown,
+                    edit_amount_input,
+                    ft.Row([edit_date_display, edit_date_button]),
+                ],
+                spacing=20,
             ),
             actions=[
-                ft.Row(
-                    [
-                        ft.TextButton(
-                            "Скасувати",
-                            on_click=close_dialog,
-                            style=ft.ButtonStyle(
-                                color=ExpColors.LIGHT_YELLOW, overlay_color=ExpColors.SUPER_DARK_GREEN
-                            ),
-                        ),
-                        ft.FilledButton(
-                            "Зберегти зміни",
-                            on_click=save_edit,
-                            style=ft.ButtonStyle(
-                                bgcolor=ExpColors.GREEN, color=ExpColors.LIGHT_YELLOW),
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ft.TextButton(
+                    "Скасувати",
+                    on_click=lambda _: setattr(page, "dialog", None),
+                    style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW),
+                ),
+                ft.FilledButton(
+                    "Зберегти",
+                    on_click=save_edit,
+                    style=ft.ButtonStyle(bgcolor=ExpColors.SUPER_DARK_GREEN, color=ExpColors.LIGHT_YELLOW),
                 ),
             ],
-            actions_alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             bgcolor=ExpColors.DARK_GREEN,
-            shape=ft.RoundedRectangleBorder(radius=10),
         )
+
+        page.dialog = edit_dialog
+        page.update()
 
     def build_expense_rows():
         db_expenses = Expense.get_all_user_expenses()
@@ -608,17 +494,16 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
                         ],
                         expand=True,
                     ),
-                    # ft.IconButton(
-                    #     icon=ft.Icons.EDIT,
-                    #     tooltip="Редагувати",
-                    #     on_click=lambda e, exp=expense: show_edit_dialog(exp),
-                    #     icon_color=ExpColors.LIGHT_YELLOW,
-                    # ),
+                    ft.IconButton(
+                        icon=ft.Icons.EDIT,
+                        tooltip="Редагувати",
+                        on_click=lambda e, exp=expense: show_edit_dialog(exp),
+                        icon_color=ExpColors.LIGHT_YELLOW,
+                    ),
                     ft.IconButton(
                         icon=ft.Icons.DELETE,
                         tooltip="Видалити",
-                        on_click=lambda e, id=expense["expense_id"]: delete_expense(
-                            id),
+                        on_click=lambda e, id=expense["expense_id"]: delete_expense(id),
                         icon_color=ExpColors.LIGHT_YELLOW,
                     ),
                 ],
@@ -635,14 +520,12 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             new_category_input.focus()
         page.update()
 
-    add_category_button.on_click = lambda e: update_category_visibility(
-        not new_category_input.visible)
+    add_category_button.on_click = lambda e: update_category_visibility(not new_category_input.visible)
 
     add_expense_container = ft.Container(
         content=ft.Column(
             [
-                ft.Text("Додати нову витрату", size=20,
-                        weight="bold", color=ExpColors.LIGHT_YELLOW),
+                ft.Text("Додати нову витрату", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW),
                 expense_input,
                 category_row,
                 ft.Row([date_display, date_icon_button]),
@@ -657,14 +540,12 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         bgcolor=ExpColors.DARK_GREEN,
     )
 
-    expense_list = ft.ListView(
-        spacing=10, padding=20, auto_scroll=True, expand=True)
+    expense_list = ft.ListView(spacing=10, padding=20, auto_scroll=True, expand=True)
     expense_list.controls = build_expense_rows()
 
     expenses_history_container = ft.Container(
         content=ft.Column(
-            [ft.Text("Історія витрат", size=20, weight="bold",
-                     color=ExpColors.LIGHT_YELLOW), expense_list],
+            [ft.Text("Історія витрат", size=20, weight="bold", color=ExpColors.LIGHT_YELLOW), expense_list],
             spacing=10,
             expand=True,
         ),
@@ -673,6 +554,22 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         border=ft.border.all(1, ExpColors.LIGHT_GREEN),
         border_radius=10,
         margin=10,
+        bgcolor=ExpColors.DARK_GREEN,
+    )
+
+    summary_dialog = ft.AlertDialog(
+        title=ft.Text("Підсумки витрат", color=ExpColors.LIGHT_YELLOW),
+        content=ft.Column([
+            ft.Text("Загальна сума витрат: 450.00 ₴", size=18, weight="bold", color=ExpColors.LIGHT_YELLOW),
+            ft.Divider(color=ExpColors.LIGHT_GREEN),
+            ft.Text("Витрати по категоріях:", size=16, color=ExpColors.LIGHT_YELLOW),
+            ft.Text("Їжа: 250.00 ₴ (55.6%)", color=ExpColors.LIGHT_GREEN),
+            ft.Text("Транспорт: 120.00 ₴ (26.7%)", color=ExpColors.LIGHT_GREEN),
+            ft.Text("Розваги: 80.00 ₴ (17.8%)", color=ExpColors.LIGHT_GREEN),
+            ft.Divider(color=ExpColors.LIGHT_GREEN),
+            ft.Text("Витрати за останній тиждень: 300.00 ₴", size=16, color=ExpColors.LIGHT_YELLOW),
+        ]),
+        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
         bgcolor=ExpColors.DARK_GREEN,
     )
 
@@ -706,8 +603,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             ],
             spacing=10,
         ),
-        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(
-            color=ExpColors.LIGHT_YELLOW))],
+        actions=[ft.TextButton("Закрити", style=ft.ButtonStyle(color=ExpColors.LIGHT_YELLOW))],
         bgcolor=ExpColors.DARK_GREEN,
     )
 
@@ -734,8 +630,7 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
             ft.Tab(
                 text="Витрати",
                 icon=ft.Icons.PAID,
-                content=ft.Column(
-                    [add_expense_container, expenses_history_container], spacing=10, expand=True),
+                content=ft.Column([add_expense_container, expenses_history_container], spacing=10, expand=True),
             ),
             ft.Tab(
                 text="Місячна статистика",
@@ -747,6 +642,16 @@ def expense_view(page: ft.Page, params: Params, basket: Basket) -> ft.View:
         label_color=ExpColors.LIGHT_YELLOW,
         unselected_label_color=ExpColors.LIGHT_GREEN,
         divider_color=ExpColors.LIGHT_GREEN,
+    )
+
+    main_container = ft.Container(
+        content=ft.Column([app_bar, tabs], expand=True),
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_center,
+            end=ft.alignment.bottom_center,
+            colors=[ExpColors.SUPER_DARK_GREEN, ExpColors.DARK_GREEN],
+        ),
+        expand=True,
     )
 
     return ft.View(
